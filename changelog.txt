@@ -13,6 +13,9 @@ that repo.
 
 # Future
 
+## New Scripts
+- `gui/workorder-recheck`: resets the selected work order to the `Checking` state
+
 # 0.47.04-r4
 
 ## New Scripts
