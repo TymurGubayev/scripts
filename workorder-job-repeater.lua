@@ -15,6 +15,10 @@ For best experience add following to your ``onMapLoad*.init``::
 
     workorder-job-repeater start
 
+Optional second parameter lets you control how frequent the check
+is made, in game ticks. Default is 10.
+    
+    workorder-job-repeater start 10
 ]====]
 end
 
@@ -44,12 +48,7 @@ local findManagerOrderById = function (id)
 end
 
 local findBuildingById = function (id)
-    for _, b in ipairs(df.global.world.buildings.all) do
-        if b.id == id then
-            return b
-        end
-    end
-    return nil
+    return df.building.find(id)
 end
 
 local findJobById = function (id)
@@ -93,7 +92,8 @@ end
 
 local function repeatJob(order, job)
     if not (job and order) then
-        qerror('! (job and order)')
+        -- should never ever happen #hope
+        qerror("both job and order are nil")
         return
     end
     
@@ -150,7 +150,7 @@ local function repeatJob(order, job)
     -- step 1: associate a posting with it
     local ok = addJobToPostings(job)
     if not ok then
-        log(WARN, "Couldn't add job of order.id " .. order.id .. " to a posting")
+        log(ERROR, "Couldn't add job of order.id " .. order.id .. " to a posting")
         return
     end
     
@@ -179,7 +179,8 @@ local function repeatJob(order, job)
     log(DEBUG, "Added job " .. job.id .. " to workshop.jobs")
 end
 
-local function start()
+local function start(N)
+    N = tonumber(N) or 10
     eventful.onJobCompleted.workorder_repeat_job_immediately = function(job)
         local order_id = job.order_id
         local order = order_id > 0 and findManagerOrderById(order_id)
@@ -188,7 +189,7 @@ local function start()
             repeatJob(order, job)
         end
     end
-    eventful.enableEvent(eventful.eventType.JOB_COMPLETED, 1) -- check every tick
+    eventful.enableEvent(eventful.eventType.JOB_COMPLETED, N) -- check every N ticks
 
     log(INFO, "job repeater started")
 end
@@ -216,4 +217,4 @@ local actions = {
 }
 
 -- Lua is beautiful.
-(actions[ (...) or "default" ] or default_action)(...)
+(actions[ (...) or "default" ] or default_action)(select(2,...))
