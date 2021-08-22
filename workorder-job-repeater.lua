@@ -25,6 +25,7 @@ For best experience add following to your ``onMapLoad*.init``::
 
 :enable, start <frequency>: starts job monitoring, running every ``<frequency>`` ticks (default: 10).
 :disable, stop:             stops the script.
+
 -f, --frequency <ticks>     sets job monitoring frequency to ``<ticks>``
                             (only if it's lower than the previously set value,
                             see `eventful` for details).
