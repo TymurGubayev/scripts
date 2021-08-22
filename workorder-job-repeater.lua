@@ -1,4 +1,4 @@
--- simulates workshop's "repeat" for infinite work orders
+-- reduces pauses between jobs of infinite work orders
 
 local function print_help()
     print[====[
@@ -14,11 +14,23 @@ work orders). This script makes the dwarfes work harder.
 For best experience add following to your ``onMapLoad*.init``::
 
     workorder-job-repeater start
-
-Optional second parameter lets you control how frequent the check
-is made, in game ticks. Default is 10.
     
-    workorder-job-repeater start 10
+**Usage**:
+
+``[enable | disable] workorder-job-repeater``
+
+``workorder-job-repeater start [<frequency>] | stop``
+
+``workorder-job-repeater --frequency <ticks> | --verbose | --help``
+
+:enable, start <frequency>: starts job monitoring, running every ``<frequency>`` ticks (default: 10).
+:disable, stop:             stops the script.
+-f, --frequency <ticks>     sets job monitoring frequency to ``<ticks>``
+                            (only if it's lower than the previously set value,
+                            see `eventful` for details).
+-v, --verbose               toggles script's verbosity.
+-h, --help                  this help.
+
 ]====]
 end
 
@@ -31,11 +43,31 @@ local WARN = 3
 local ERROR = 4
 local OFF = 6
 
-local verbosity = INFO
+local colors = {}
+colors[DEBUG] = COLOR_LIGHTMAGENTA
+colors[INFO] = COLOR_CYAN
+colors[WARN] = COLOR_YELLOW
+colors[ERROR] = COLOR_LIGHTRED
+
+-- globals persist across script runs
+verbosity = verbosity or INFO
+
+if not scriptname then
+    local function get_file_name(file)
+          local file_name = file:match("[^/]*.lua$")
+          return file_name:sub(0, #file_name - 4)
+    end
+    -- in our case, 1st parameter of debug.getinfo
+    -- could be any function defined in this script
+    local filepath = debug.getinfo(get_file_name, 'S').source
+    scriptname = get_file_name(filepath)
+end
 
 local function log(level, ...)
     if level < verbosity then return end
-    print (...)
+    local color = dfhack.color(colors[level])
+    print ((scriptname or '').. ':', ...)
+    dfhack.color(color)
 end
 
 local findManagerOrderById = function (id)
@@ -44,6 +76,7 @@ local findManagerOrderById = function (id)
             return o
         end
     end
+    log(WARN, "Couldn't find work order", id)
     return nil
 end
 
@@ -66,7 +99,7 @@ local only_infty = true -- we will only repeat jobs which work order's amount is
 --[[ "I don't fully understand how this works, so this might be horribly wrong
       The DF job assigner needs a job to be in postings for it to automatically be assigned to a unit."(c)
 --]]
-function addJobToPostings(job)
+local function addJobToPostings(job)
     local addedIndex = false
     -- Find the first free empty postings to add a job to
     for index, posting in ipairs(df.global.world.jobs.postings) do
@@ -179,33 +212,77 @@ local function repeatJob(order, job)
     log(DEBUG, "Added job " .. job.id .. " to workshop.jobs")
 end
 
+frequency = frequency or 10
 local function start(N)
-    N = tonumber(N) or 10
+    frequency = tonumber(N) or frequency
+    if eventful.onJobCompleted.workorder_repeat_job_immediately then
+        log(DEBUG, "onJobCompleted event handler was present and is overwritten")
+    end
     eventful.onJobCompleted.workorder_repeat_job_immediately = function(job)
+        log(DEBUG, "job completed: " .. dfhack.job.getName(job) .. " (id " .. job.id .. ", job.order_id " .. job.order_id .. ")")
         local order_id = job.order_id
         local order = order_id > 0 and findManagerOrderById(order_id)
         if order then
             -- log(DEBUG, "work order", order_id, order)
             repeatJob(order, job)
+        elseif order_id > 0 then
+            log(DEBUG, "order_id " .. order_id .. " > 0 but no work order found (probably cancelled)")
         end
     end
-    eventful.enableEvent(eventful.eventType.JOB_COMPLETED, N) -- check every N ticks
+    eventful.enableEvent(eventful.eventType.JOB_COMPLETED, frequency) -- check every tick
 
-    log(INFO, "job repeater started")
+    log(INFO, "started")
 end
 
 local function stop()
     eventful.onJobCompleted.workorder_repeat_job_immediately = nil
     
-    log(INFO, "job repeater stopped")
+    log(INFO, "stopped")
 end
+
+-- arguments handling
+
+--@ enable = true
+if dfhack_flags.enable then
+    if dfhack_flags.enable_state then
+        start()
+    else
+        stop()
+    end
+    return
+end
+
+local need_action = true
+local help = false
+local other_args = (require 'argparse').processArgsGetopt({...}, {
+        {'?', handler=function() help = true end},
+        {'h', 'help', handler=function() help = true end},
+        {'v', 'verbose', handler=function()
+            if verbosity > DEBUG
+            then verbosity = DEBUG; log(DEBUG, "verbosity set to DEBUG")
+            else verbosity = INFO
+            end
+            need_action = false
+        end},
+        {'f', 'frequency', hasArg = true, handler=function(f)
+            log(DEBUG, "previous frequency", frequency)
+            f = tonumber(f)
+            if f < frequency then
+                log(INFO, "increase frequency to every " .. f .. " ticks")
+                eventful.enableEvent(eventful.eventType.JOB_COMPLETED, frequency)
+            else
+                log(WARN, "Can't decrease frequency (current: " .. frequency .. " ticks)")
+            end
+            need_action = false
+        end},
+    })
+local action = help and 'help' or other_args[1]
+if not action and not need_action then return end
 
 local default_action = print_help
 local actions = {
     -- help
-    ["-?"] = print_help,
     ["?"] = print_help,
-    ["--help"] = print_help,
     ["help"] = print_help,
     --
     ["default"] = print_help,
@@ -217,4 +294,4 @@ local actions = {
 }
 
 -- Lua is beautiful.
-(actions[ (...) or "default" ] or default_action)(select(2,...))
+(actions[action] or default_action)(select(2,...))
