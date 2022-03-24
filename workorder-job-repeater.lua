@@ -125,7 +125,7 @@ end
 local function repeatJob(order, job)
     if not (job and order) then
         -- should never ever happen #hope
-        qerror("both job and order are nil")
+        qerror("job or order is nil")
         return
     end
     
