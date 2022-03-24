@@ -12,6 +12,7 @@ For best experience add following to your ``dfhack*.init``::
 ]====]
 
 local gui = require 'gui'
+local widgets = require 'gui.widgets'
 local utils = require 'utils'
 
 -- local args = utils.invert({...})
@@ -118,7 +119,7 @@ local we = df.global.ui.group_id
 local function getAgreementDetails(a)
     local sb = {} -- StringBuilder
 
-    sb[#sb+1] = {{text = "Agreement #" ..a.id, pen = COLOR_RED}}
+    sb[#sb+1] = {text = "Agreement #" ..a.id, pen = COLOR_RED}
     sb[#sb+1] = NEWLINE
 
     local us = "Us"
@@ -137,7 +138,11 @@ local function getAgreementDetails(a)
             them = table.concat(e_descr, ", ")
         end
     end
-    sb[#sb+1] = (them .. " petitioned " .. us)
+    sb[#sb+1] = them
+    sb[#sb+1] = NEWLINE
+    sb[#sb+1] = " petitioned"
+    sb[#sb+1] = NEWLINE
+    sb[#sb+1] = us
     sb[#sb+1] = NEWLINE
     for _, d in ipairs (a.details) do
         local petition_date = Time{year = d.year, ticks = d.year_tick}
@@ -159,15 +164,17 @@ local function getAgreementDetails(a)
         sb[#sb+1] = NEWLINE
         if d.type == df.agreement_details_type.Location then
             local details = d.data.Location
-            local msg = {}
-            msg[#msg+1] = "Provide a " .. df.abstract_building_type[details.type]
-            msg[#msg+1] = " of tier " .. details.tier
+            sb[#sb+1] = "Provide a "
+            sb[#sb+1] = {text = df.abstract_building_type[details.type], pen = COLOR_LIGHTGREEN}
+            sb[#sb+1] = " of tier " .. details.tier
             if details.deity_type ~= -1 then
-                msg[#msg+1] = " of a " .. df.temple_deity_type[details.deity_type] -- None/Deity/Religion
+                sb[#sb+1] = " of a "
+                -- None/Deity/Religion
+                sb[#sb+1] = {text = df.temple_deity_type[details.deity_type], pen = COLOR_LIGHTGREEN}
             else
-                msg[#msg+1] = " for " .. df.profession[details.profession]
+                sb[#sb+1] = " for "
+                sb[#sb+1] = {text = df.profession[details.profession], pen = COLOR_LIGHTGREEN}
             end
-            sb[#sb+1] = (table.concat(msg))
             sb[#sb+1] = NEWLINE
         end
     end
@@ -175,10 +182,10 @@ local function getAgreementDetails(a)
     local petition = {}
 
     if a.flags.petition_not_accepted then
-        sb[#sb+1] = {{text = "This petition wasn't accepted yet!", pen = COLOR_YELLOW}}
+        sb[#sb+1] = {text = "This petition wasn't accepted yet!", pen = COLOR_YELLOW}
         petition.status = 'PENDING'
     elseif a.flags.convicted_accepted then
-        sb[#sb+1] = {{text = "This petition was fulfilled!", pen = COLOR_GREEN}}
+        sb[#sb+1] = {text = "This petition was fulfilled!", pen = COLOR_GREEN}
         petition.status = 'FULFILLED'
     else
         petition.status = 'ACCEPTED'
@@ -210,96 +217,83 @@ local petitions = defclass(petitions, gui.FramedScreen)
 petitions.ATTRS = {
     frame_style = gui.GREY_LINE_FRAME,
     frame_title = 'Petitions',
-    frame_width = 20,
-    frame_height = 18,
-    frame_inset = 1,
+    frame_width = 21, -- is calculated in :refresh
+    min_frame_width = 21,
+    frame_height = 16,
+    frame_inset = 0,
     focus_path = 'petitions',
 }
 
 function petitions:init(args)
-    self.start = 1
     self.list = args.list
+    -- self.fulfilled = true
+    self:addviews{
+        widgets.Label{
+            view_id = 'text',
+            frame_inset = 0,
+            text = '',
+        },
+    }
+    
+    self:refresh()
+end
+
+function petitions:refresh()
     local lines = {}
-    for _, p in ipairs(args.list) do
-        local width = 0
-        for _, t in ipairs(p.text) do
-            if t == NEWLINE then
-                self.frame_width = math.max(self.frame_width, width + 2)
-                width = 0
-            elseif type(t) == 'string' then
-                width = width + #t + 1
-            else
-                for _, tok in ipairs(t) do
-                    width = width + #tok.text + 1
-                end
-            end
-        end
-        self.frame_width = math.max(self.frame_width, width + 2)
-    end
-    self.frame_height = 18
-    self.frame_width = math.min(df.global.gps.dimx - 2, self.frame_width)
-end
-
-function paint_token(p, t)
-    if type(t) == 'table' then
-        for _, tok in ipairs(t) do
-            p:string(tok.text, tok.pen)
-        end
-    else
-        p:string(t)
-    end
-end
-
-function petitions:onRenderBody(painter)
-    local n = 1
-    local first = false
+    -- list of petitions
     for _, p in ipairs(self.list) do
-        if p.status == 'FULFILLED' and not self.fulfilled then goto continue end
-        for _, t in ipairs(p.text) do
-            if self.start <= n and n <= self.start + self.frame_height then
-                if first then
-                    painter:newline()
-                    n = n + 1
-                    first = false
-                end
-                if t == NEWLINE then
-                    painter:newline()
-                else
-                    paint_token(painter,t)
-                    painter:string(' ')
-                end
-            end
-            if t == NEWLINE then n = n + 1 end
+        if not self.fulfilled and p.status == 'FULFILLED' then goto continue end
+        -- each petition is a status and a text
+        for _, tok in ipairs(p.text) do
+            -- where text is a list of tokens
+            table.insert(lines, tok)
         end
-        first = true
+        table.insert(lines, NEWLINE)
     ::continue::
     end
-    self.max_start = math.max(1, n - self.frame_height + 1)
+    table.remove(lines, #lines) -- remove last NEWLINE
+
+    local label = self.subviews.text
+    label:setText(lines)
     
-    if n > self.frame_height then
-        if self.start > 1 then
-            painter:seek(self.frame_width - 1, 0):string(string.char(24), COLOR_LIGHTCYAN) -- up
-        end
-        if self.start < self.max_start then
-            painter:seek(self.frame_width - 1, self.frame_height - 1):string(string.char(25), COLOR_LIGHTCYAN) -- down
+    -- changing text doesn't automatically change scroll position
+    if label.frame_body then
+        local last_visible_line = label.start_line_num + label.frame_body.height - 1
+        if last_visible_line > label:getTextHeight() then
+            label.start_line_num = math.max(label:getTextHeight() - label.frame_body.height + 1, 1)
         end
     end
+    
+    self.frame_width = math.max(label:getTextWidth(), self.min_frame_width)
+    self.frame_width = math.min(df.global.gps.dimx - 2, self.frame_width)
+    self:onResize(dfhack.screen.getWindowSize()) -- applies new frame_width
 end
 
-function petitions:onRenderFrame(p, frame)
-    petitions.super.onRenderFrame(self, p, frame)
-    p:seek(frame.x1 + 2, frame.y1+frame.height-1):key_string('CUSTOM_F', "toggle fulfilled")
+function petitions:onRenderFrame(painter, frame)
+    petitions.super.onRenderFrame(self, painter, frame)
+    
+    painter:seek(frame.x1+2, frame.y1 + frame.height-1):key_string('CUSTOM_F', "toggle fulfilled")
+    
+    local label = self.subviews.text
+    if label:getTextHeight() > label.frame_body.height then
+        if label.start_line_num ~= 1 then
+            painter:seek(frame.x2, frame.y1+1):string(string.char(24), COLOR_LIGHTCYAN) -- up arrow
+        end
+        local last_visible_line = label.start_line_num + label.frame_body.height - 1
+        if last_visible_line < label:getTextHeight() then
+            painter:seek(frame.x2, frame.y2-1):string(string.char(25), COLOR_LIGHTCYAN) -- down arrow
+        end
+    end
 end
 
 function petitions:onInput(keys)
+    if petitions.super.onInput(self, keys) then return end
+
     if keys.LEAVESCREEN or keys.SELECT then
         self:dismiss()
-    elseif keys.CURSOR_UP or keys.STANDARDSCROLL_UP then
-        self.start = math.max(1, self.start - 1)
-    elseif keys.CURSOR_DOWN or keys.STANDARDSCROLL_DOWN then
-        self.start = math.min(self.start + 1, self.max_start)
     elseif keys.CUSTOM_F then
         self.fulfilled = not self.fulfilled
+        self:refresh()
     end
 end
 
