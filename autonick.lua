@@ -1,4 +1,4 @@
--- automatically nickname dwarves
+-- gives dwarves unique nicknames
 --[====[
 
 autonick
