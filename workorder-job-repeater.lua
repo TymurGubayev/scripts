@@ -27,8 +27,6 @@ For best experience add following to your ``onMapLoad*.init``::
 :disable, stop:             stops the script.
 
 -f, --frequency <ticks>     sets job monitoring frequency to ``<ticks>``
-                            (only if it's lower than the previously set value,
-                            see `eventful` for details).
 -v, --verbose               toggles script's verbosity.
 -h, --help                  this help.
 
