@@ -7,12 +7,12 @@ Adjust input items, material, or traits for work orders. Actual
 jobs created for it will inherit the details.
 
 This is the equivalent of `gui/workshop-job` for work orders,
-with additional possibility to set input items' traits.
+with the additional possibility to set input items' traits.
 
 It has to be run from a work order's detail screen
 (:kbd:`j-m`, select work order, :kbd:`d`).
 
-For best experience add following to your ``dfhack*.init``::
+For best experience add the following to your ``dfhack*.init``::
 
     keybinding add D@workquota_details gui/workorder-finetune
 
@@ -25,11 +25,13 @@ of the code here comes from.
 
 local utils = require 'utils'
 local gui = require 'gui'
-local guidm = require 'gui.dwarfmode'
 local guimat = require 'gui.materials'
 local widgets = require 'gui.widgets'
 local dlg = require 'gui.dialogs'
 
+local wsj = reqscript 'gui/workshop-job'
+
+-- start gui.materials.ItemTraitDialog
 --------------------------------------
 local job_item_flags_map = {}
 for i = 1, 3 do
@@ -292,6 +294,7 @@ guimat.ItemTraitDialog = function(args)
 
     return dlg.ListBox(args)
 end
+-- end gui.materials.ItemTraitDialog
 
 JobDetails = defclass(JobDetails, gui.FramedScreen)
 
@@ -347,47 +350,10 @@ function JobDetails:onGetSelectedJob()
     return self.job
 end
 
-function describe_item_type(iobj)
-    local itemline = 'any item'
-    if iobj.item_type >= 0 then
-        itemline = df.item_type.attrs[iobj.item_type].caption or iobj.item_type
-        local def = dfhack.items.getSubtypeDef(iobj.item_type, iobj.item_subtype)
-        local count = dfhack.items.getSubtypeCount(iobj.item_type, iobj.item_subtype)
-        if def then
-            itemline = def.name
-        elseif count >= 0 then
-            itemline = 'any '..itemline
-        end
-    end
-    return itemline
-end
-
-function is_caste_mat(iobj)
-    return dfhack.items.isCasteMaterial(iobj.item_type)
-end
-
-function describe_material(iobj)
-    local matline = 'any material'
-    if is_caste_mat(iobj) then
-        matline = 'material not applicable'
-    elseif iobj.mat_type >= 0 then
-        local info = dfhack.matinfo.decode(iobj.mat_type, iobj.mat_index)
-        if info then
-            matline = info:toString()
-        else
-            matline = iobj.mat_type..':'..iobj.mat_index
-        end
-    end
-    return matline
-end
-
-function list_flags(list, bitfield)
-    for name,val in pairs(bitfield) do
-        if val then
-            table.insert(list, name)
-        end
-    end
-end
+describe_item_type = wsj.describe_item_type
+is_caste_mat = wsj.is_caste_mat
+describe_material = wsj.describe_material
+list_flags = wsj.list_flags
 
 function describe_item_traits(iobj)
     local line1 = {}
@@ -453,94 +419,13 @@ function JobDetails:initListChoices()
     self.subviews.list:setChoices(choices)
 end
 
-function JobDetails:canChangeIType()
-    local idx, obj = self.subviews.list:getSelected()
-    return obj ~= nil
-end
-
-function JobDetails:setItemType(obj, item_type, item_subtype)
-    obj.iobj.item_type = item_type
-    obj.iobj.item_subtype = item_subtype
-
-    if is_caste_mat(obj.iobj) then
-        self:setMaterial(obj, -1, -1)
-    end
-end
-
-function JobDetails:onChangeIType()
-    local idx, obj = self.subviews.list:getSelected()
-    guimat.ItemTypeDialog{
-        prompt = 'Please select a new item type for input '..idx,
-        none_caption = 'any item',
-        item_filter = curry(dfhack.job.isSuitableItem, obj.iobj),
-        on_select = self:callback('setItemType', obj)
-    }:show()
-end
-
-function JobDetails:canChangeMat()
-    local idx, obj = self.subviews.list:getSelected()
-    return obj ~= nil and not is_caste_mat(obj.iobj)
-end
-
-function JobDetails:setMaterial(obj, mat_type, mat_index)
-    if  obj.index == 0
-    and self.job.mat_type == obj.iobj.mat_type
-    and self.job.mat_index == obj.iobj.mat_index
-    and self.job.job_type ~= df.job_type.PrepareMeal
-    then
-        self.job.mat_type = mat_type
-        self.job.mat_index = mat_index
-    end
-
-    obj.iobj.mat_type = mat_type
-    obj.iobj.mat_index = mat_index
-end
-
-function JobDetails:findUnambiguousItem(iobj)
-    local count = 0
-    local itype
-
-    for i = 0,df.item_type._last_item do
-        if dfhack.job.isSuitableItem(iobj, i, -1) then
-            count = count + 1
-            if count > 1 then return nil end
-            itype = i
-        end
-    end
-
-    return itype
-end
-
-function JobDetails:onChangeMat()
-    local idx, obj = self.subviews.list:getSelected()
-
-    if obj.iobj.item_type == -1 and obj.iobj.mat_type == -1 then
-        -- If the job allows only one specific item type, use it
-        local vitype = self:findUnambiguousItem(obj.iobj)
-
-        if vitype then
-            obj.iobj.item_type = vitype
-        else
-            dlg.showMessage(
-                'Bug Alert',
-                { 'Please set a specific item type first.\n\n',
-                  'Otherwise the material will be matched\n',
-                  'incorrectly due to a limitation in DF code.' },
-                COLOR_YELLOW
-            )
-            return
-        end
-    end
-
-    guimat.MaterialDialog{
-        prompt = 'Please select a new material for input '..idx,
-        none_caption = 'any material',
-        mat_filter = function(mat,parent,mat_type,mat_index)
-            return dfhack.job.isSuitableMaterial(obj.iobj, mat_type, mat_index, obj.iobj.item_type)
-        end,
-        on_select = self:callback('setMaterial', obj)
-    }:show()
-end
+JobDetails.canChangeIType = wsj.JobDetails.canChangeIType
+JobDetails.setItemType = wsj.JobDetails.setItemType
+JobDetails.onChangeIType = wsj.JobDetails.onChangeIType
+JobDetails.canChangeMat = wsj.JobDetails.canChangeMat
+JobDetails.setMaterial = wsj.JobDetails.setMaterial
+JobDetails.findUnambiguousItem = wsj.JobDetails.findUnambiguousItem
+JobDetails.onChangeMat = wsj.JobDetails.onChangeMat
 
 function JobDetails:onInput(keys)
     JobDetails.super.onInput(self, keys)

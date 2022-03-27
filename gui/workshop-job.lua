@@ -47,6 +47,9 @@ and then try to change the input item type, now it won't let you select *plant*;
 you have to unset the material first.
 
 ]====]
+
+--@ module = true
+
 local utils = require 'utils'
 local gui = require 'gui'
 local guidm = require 'gui.dwarfmode'
@@ -327,5 +330,8 @@ if not string.match(dfhack.gui.getCurFocus(), '^dwarfmode/QueryBuilding/Some/Wor
     qerror("This script requires a workshop job selected in the 'q' mode")
 end
 
+if dfhack_flags.module then
+    return
+end
 local dlg = JobDetails{ job = dfhack.gui.getSelectedJob() }
 dlg:show()
