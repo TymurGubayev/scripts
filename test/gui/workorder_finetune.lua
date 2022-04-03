@@ -28,7 +28,7 @@ function test.changeOrderDetails()
     
     --- create an order
     send_keys('MANAGER_NEW_ORDER')
-    for i = 1, 5 do	send_keys('STANDARDSCROLL_DOWN') end -- move cursor to CUT SLADE
+    for i = 1, 5 do send_keys('STANDARDSCROLL_DOWN') end -- move cursor to CUT SLADE
     send_keys('SELECT') -- select it
     send_keys('SELECT') -- accept 0 quantity = perpetual order
     wait()
