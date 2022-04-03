@@ -19,8 +19,8 @@ For best experience add the following to your ``dfhack*.init``::
 ]====]
 
 --[[
-credit goes to the author of `gui/workshop-job` where the majority
-of the code here comes from.
+Credit goes to the author of `gui/workshop-job`, it showed
+me the way. Also, a huge chunk of code could be reused.
 ]]
 
 local utils = require 'utils'
