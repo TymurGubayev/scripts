@@ -1,4 +1,4 @@
--- test -dhack/scripts/devel/tests -tdialogs
+-- test -dhack/scripts/devel/tests -tworkorder_finetune
 
 config.mode = 'fortress'
 
