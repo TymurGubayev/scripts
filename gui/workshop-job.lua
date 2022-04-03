@@ -326,12 +326,13 @@ function JobDetails:onInput(keys)
     end
 end
 
+if dfhack_flags.module then
+    return
+end
+
 if not string.match(dfhack.gui.getCurFocus(), '^dwarfmode/QueryBuilding/Some/Workshop/Job') then
     qerror("This script requires a workshop job selected in the 'q' mode")
 end
 
-if dfhack_flags.module then
-    return
-end
 local dlg = JobDetails{ job = dfhack.gui.getSelectedJob() }
 dlg:show()

@@ -535,10 +535,10 @@ function JobDetails:onChangeTrait()
 end
 
 local scr = dfhack.gui.getCurViewscreen()
-if df.viewscreen_workquota_detailsst:is_instance(scr) then
-    -- by opening the viewscreen_workquota_detailsst the
-    -- work order's .items array is initialized
-    JobDetails{ job = scr.order }:show()
-else
+if not df.viewscreen_workquota_detailsst:is_instance(scr) then
     qerror("This script needs to be run from a work order details screen")
 end
+
+-- by opening the viewscreen_workquota_detailsst the
+-- work order's .items array is initialized
+JobDetails{ job = scr.order }:show()
