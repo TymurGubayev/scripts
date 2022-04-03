@@ -296,7 +296,7 @@ guimat.ItemTraitDialog = function(args)
 end
 -- end gui.materials.ItemTraitDialog
 
-JobDetails = defclass(JobDetails, gui.FramedScreen)
+local JobDetails = defclass(JobDetails, gui.FramedScreen)
 
 JobDetails.focus_path = 'workorder-finetune'
 
@@ -350,12 +350,12 @@ function JobDetails:onGetSelectedJob()
     return self.job
 end
 
-describe_item_type = wsj.describe_item_type
-is_caste_mat = wsj.is_caste_mat
-describe_material = wsj.describe_material
-list_flags = wsj.list_flags
+local describe_item_type = wsj.describe_item_type
+local is_caste_mat = wsj.is_caste_mat
+local describe_material = wsj.describe_material
+local list_flags = wsj.list_flags
 
-function describe_item_traits(iobj)
+local function describe_item_traits(iobj)
     local line1 = {}
     local reaction = df.reaction.find(iobj.reaction_id)
     if reaction and #iobj.contains > 0 then
