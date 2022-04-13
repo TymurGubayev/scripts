@@ -25,7 +25,7 @@ function test.changeOrderDetails()
     -- get into the orders screen
     send_keys('D_JOBLIST', 'UNITJOB_MANAGER')
     expect.true_(df.viewscreen_jobmanagementst:is_instance(dfhack.gui.getCurViewscreen(true)), "We need to be in the jobmanagement/Main screen")
-    
+
     --- create an order
     send_keys('MANAGER_NEW_ORDER')
     for i = 1, 5 do send_keys('STANDARDSCROLL_DOWN') end -- move cursor to CUT SLADE
@@ -38,7 +38,7 @@ function test.changeOrderDetails()
     expect.true_(df.viewscreen_workquota_detailsst:is_instance(dfhack.gui.getCurViewscreen(true)), "We need to be in the workquota_details screen")
     local job = dfhack.gui.getCurViewscreen(true).order
     local item = job.items[0]
-    
+
     dfhack.run_command 'gui/workorder-details'
     --[[
     input item: boulder
@@ -48,7 +48,7 @@ function test.changeOrderDetails()
     expect.ne(-1, item.item_type, "Input should not be 'any item'")
     expect.ne(-1, item.mat_type, "Material should not be 'any material'")
     expect.false_(item.flags2.allow_artifact, "Trait allow_artifact should not be set")
-    
+
     wait()
     send_keys('CUSTOM_I', 'SELECT') -- change input to 'any item'
     wait()
@@ -63,7 +63,7 @@ function test.changeOrderDetails()
     expect.eq(-1, item.item_type, "Input item should change to 'any item'")
     expect.eq(-1, item.mat_type, "Material should change to 'any material'")
     expect.true_(item.flags2.allow_artifact, "Trait allow_artifact should change to set")
-    
+
     -- cleanup
     wait()
     send_keys('LEAVESCREEN', 'LEAVESCREEN', 'MANAGER_REMOVE')

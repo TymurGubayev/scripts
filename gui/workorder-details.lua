@@ -241,7 +241,7 @@ guimat.ItemTraitDialog = function(args)
             ore_ix = ore.mat_index
         })
     end
-    
+
     local isActiveReactionClass = function(args)
         return (args.job_item.reaction_class == args.reaction_class)
     end
@@ -261,7 +261,7 @@ guimat.ItemTraitDialog = function(args)
             reaction_class = reaction_class
         })
     end
-    
+
     local isActiveProduct = function(args)
         return (args.job_item.has_material_reaction_product == args.product_materials)
     end
