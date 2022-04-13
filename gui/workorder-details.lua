@@ -1,8 +1,8 @@
 -- adjust work orders' input item, material, traits
 --[====[
 
-gui/workorder-finetune
-======================
+gui/workorder-details
+=====================
 Adjust input items, material, or traits for work orders. Actual
 jobs created for it will inherit the details.
 
@@ -14,7 +14,7 @@ It has to be run from a work order's detail screen
 
 For best experience add the following to your ``dfhack*.init``::
 
-    keybinding add D@workquota_details gui/workorder-finetune
+    keybinding add D@workquota_details gui/workorder-details
 
 ]====]
 
@@ -298,7 +298,7 @@ end
 
 local JobDetails = defclass(JobDetails, gui.FramedScreen)
 
-JobDetails.focus_path = 'workorder-finetune'
+JobDetails.focus_path = 'workorder-details'
 
 JobDetails.ATTRS {
     job = DEFAULT_NIL,
