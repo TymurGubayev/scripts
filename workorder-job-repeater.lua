@@ -75,7 +75,7 @@ local findManagerOrderById = function (id)
             return o
         end
     end
-    log(WARN, "Couldn't find work order", id)
+    log(WARN, "Couldn't find work order (cancelled?)", id)
     return nil
 end
 
@@ -228,7 +228,7 @@ local function start(N)
             log(DEBUG, "order_id " .. order_id .. " > 0 but no work order found (probably cancelled)")
         end
     end
-    eventful.enableEvent(eventful.eventType.JOB_COMPLETED, frequency) -- check every tick
+    eventful.enableEvent(eventful.eventType.JOB_COMPLETED, frequency) -- check every `frequency` ticks
 
     log(INFO, "started")
 end
@@ -266,12 +266,8 @@ local other_args = (require 'argparse').processArgsGetopt({...}, {
         {'f', 'frequency', hasArg = true, handler=function(f)
             log(DEBUG, "previous frequency", frequency)
             f = tonumber(f)
-            if f < frequency then
-                log(INFO, "increase frequency to every " .. f .. " ticks")
-                eventful.enableEvent(eventful.eventType.JOB_COMPLETED, frequency)
-            else
-                log(WARN, "Can't decrease frequency (current: " .. frequency .. " ticks)")
-            end
+            eventful.enableEvent(eventful.eventType.JOB_COMPLETED, frequency)
+            log(INFO, "new frequency", frequency)
             need_action = false
         end},
     })
