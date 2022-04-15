@@ -265,7 +265,7 @@ local other_args = (require 'argparse').processArgsGetopt({...}, {
         end},
         {'f', 'frequency', hasArg = true, handler=function(f)
             log(DEBUG, "previous frequency", frequency)
-            f = tonumber(f)
+            frequency = tonumber(f)
             eventful.enableEvent(eventful.eventType.JOB_COMPLETED, frequency)
             log(INFO, "new frequency", frequency)
             need_action = false
