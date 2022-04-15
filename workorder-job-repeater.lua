@@ -51,17 +51,7 @@ colors[ERROR] = COLOR_LIGHTRED
 -- globals persist across script runs
 verbosity = verbosity or INFO
 
-if not scriptname then
-    local function get_file_name(file)
-          local file_name = file:match("[^/]*.lua$")
-          return file_name:sub(0, #file_name - 4)
-    end
-    -- in our case, 1st parameter of debug.getinfo
-    -- could be any function defined in this script
-    local filepath = debug.getinfo(get_file_name, 'S').source
-    scriptname = get_file_name(filepath)
-end
-
+local scriptname = dfhack.current_script_name()
 local function log(level, ...)
     if level < verbosity then return end
     local color = dfhack.color(colors[level])
