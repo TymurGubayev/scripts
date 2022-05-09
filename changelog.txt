@@ -1,9 +1,9 @@
 ===[[[
 This file contains changes specific to the scripts repo. See docs/changelog.txt
 in the dfhack repo for a full description, or
-https://docs.dfhack.org/en/latest/docs/Compile.html#build-changelog
+https://docs.dfhack.org/en/latest/docs/Documentation.html#building-the-changelogs
 
-NOTE: currently, gen_changelog.txt expects a "Future" section to exist at the
+NOTE: currently, gen_changelog.py expects a "Future" section to exist at the
 top of this file (even if no changes are listed under it), or you will get a
 "Entry without section" error. Also, to maintain proper sorting in the generated
 changelogs when making a new release, docs/changelog.txt in the dfhack repo must
@@ -14,8 +14,68 @@ that repo.
 # Future
 
 ## New Scripts
+
+## Fixes
+
+## Misc Improvements
+
+# 0.47.05-r5
+
+## New Scripts
+- `devel/eventful-client`: useful for testing eventful events
+
+## Fixes
+- `devel/query`: fixed a problem printing parents when the starting path had lua pattern special characters in it
+- `devel/query`: fixed a crash when trying to iterate over linked lists
+- `gui/advfort`: encrust and stud jobs no longer consume reagents without actually improving the target item
+- `quickfort`: contructions and bridges are now properly placed over natural ramps
+- `setfps`: keep internal ratio of processing FPS to graphics FPS in sync when updating FPS
+
+## Misc Improvements
+- `autonick`: now displays help instead of modifying dwarf nicknames when run without parameters. use ``autonick all`` to rename all dwarves.
+- `autonick`: added ``--quiet`` and ``--help`` options
+- `gui/blueprint`: support new `blueprint` options and phases
+- `quickfort`: support transformations for blueprints that use expansion syntax
+- `quickfort`: adjust direction affinity when transforming buildings (e.g.  bridges that open to the north now open to the south when rotated 180 degrees)
+- `quickfort`: automatically adjust cursor movements on the map screen in ``#query`` and ``#config`` modes when the blueprint is transformed. e.g.  ``{Up}`` will be played back as ``{Right}`` when the blueprint is rotated clockwise and the direction key would move the map cursor
+- `quickfort`: new blueprint mode: ``#config``; for playing back key sequences that don't involve the map cursor (like configuring hotkeys, changing standing orders, or modifying military uniforms)
+- `quickfort`: API function ``apply_blueprint`` can now take ``data`` parameters that are simple strings instead of coordinate maps. This allows easier application of blueprints that are just one cell.
+
+# 0.47.05-r4
+
+## Fixes
+- `quickfort`: produce a useful error message instead of a code error when a bad query blueprint key sequence leaves the game in a mode that does not have an active cursor
+- `quickfort`: restore functionality to the ``--verbose`` commandline flag
+- `quickfort`: don't designate tiles for digging if they are within the bounds of a planned or constructed building
+- `quickfort`: allow grates, bars, and hatches to be built on flat floor (like DF itself allows)
+- `quickfort`: allow tracks to be built on hard, natural rock ramps
+- `quickfort`: allow dig priority to be properly set for track designations
+- `quickfort`: fix incorrect directions for tracks that extend south or east from a track segment pair specified with expansion syntax (e.g. T(4x4))
+- `quickfort`: fix parsing of multi-part extended zone configs (e.g. when you set custom supply limits for hospital zones AND set custom flags for a pond)
+- `quickfort`: fix error when attempting to set a custom limit for plaster powder in a hospital zone
+- `exportlegends`: fix issue where birth year was outputted as birth seconds
+
+## Misc Improvements
+- `gui/blueprint`: support the new ``--splitby`` and ``--format`` options for `blueprint`
+- `gui/blueprint`: hide help text when the screen is too short to display it
+- `quickfort`: add ``quickfort.apply_blueprint()`` API function that can be called directly by other scripts
+- `quickfort`: by default, don't designate tiles for digging that have masterwork engravings on them. quality level to preserve is configurable with the new ``--preserve-engravings`` param
+- `quickfort`: implement single-tile track aliases so engraved tracks can be specified tile-by-tile just like constructed tracks
+- `quickfort`: allow blueprints to jump up or down multiple z-levels with a single command (e.g. ``#>5`` goes down 5 levels)
+- `quickfort`: blueprints can now be repeated up and down a specified number of z-levels via ``repeat`` markers in meta blueprints or the ``--repeat`` commandline option
+- `quickfort`: blueprints can now be rotated, flipped, and shifted via ``transform`` and ``shift`` markers in meta blueprints or the corresponding commandline options
+
+## Removed
+- `digfort`: please use `quickfort` instead
+
+# 0.47.05-r3
+
+## New Scripts
+- `autonick`: gives dwarves unique nicknames
+- `build-now`: instantly completes planned building constructions
+- `do-job-now`: makes a job involving current selection high priority
+- `prioritize`: automatically boosts the priority of current and/or future jobs of specified types, such as hauling food, tanning hides, or pulling levers
 - `reveal-adv-map`: exposes/hides all world map tiles in adventure mode
-- `autonick`: automatically nicknames dwarves
 
 ## Fixes
 - `devel/export-dt-ini`: fixed incorrect vtable address on Windows
@@ -23,8 +83,29 @@ that repo.
 - `quickfort`: fix error message when the requested label is not found in the blueprint file
 
 ## Misc Improvements
+- `assign-beliefs`, `assign-facets`: now update needs of units that were changed
+- `devel/query`: updated script to v3.2 (i.e. major rewrite for maintainability/readability)
+- `devel/query`: merged options ``-query`` and ``-querykeys`` into ``-search``
+- `devel/query`: merged options ``-depth`` and ``-keydepth`` into ``-maxdepth``
+- `devel/query`: replaced option ``-safer`` with ``-excludetypes`` and ``-excludekinds``
+- `devel/query`: improved how tile data is dealt with identification, iteration, and searching
+- `devel/query`: added option ``-findvalue``
+- `devel/query`: added option ``-showpaths`` to print full data paths instead of nested fields
+- `devel/query`: added option ``-nopointers`` to disable printing values with memory addresses
+- `devel/query`: added option ``-alignto`` to set the value column's alignment
+- `devel/query`: added options ``-oneline`` and alias ``-1`` to avoid using two lines for fields with metadata
+- `devel/query`: added support for matching multiple patterns
+- `devel/query`: added support for selecting the highlighted job, plant, building, and map block data
+- `devel/query`: added support for selecting a Lua script (e.g. `dorf_tables`)
+- `devel/query`: added support for selecting a Json file (e.g. dwarf_profiles.json)
+- `devel/query`: removed options ``-listall``, ``-listfields``, and ``-listkeys`` - these are now simply default behaviour
+- `devel/query`: ``-table`` now accepts the same abbreviations (global names, ``unit``, ``screen``, etc.) as `lua` and `gui/gm-editor`
+- `dorf_tables`: integrated `devel/query` to show the table definitions when requested with ``-list``
+- `geld`: fixed ``-help`` option
 - `gui/gm-editor`: made search case-insensitive
+- `quickfort`: accept multiple commands, list numbers, and/or blueprint lables on a single commandline
 - `unretire-anyone`: replaced the 'undead' descriptor with 'reanimated' to make it more mod-friendly
+- `warn-starving`: added an option to only check sane dwarves
 
 ## Internals
 - Install tests in the scripts repo into hack/scripts/test/scripts when the CMake variable BUILD_TESTS is defined
