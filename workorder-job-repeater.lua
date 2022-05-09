@@ -210,10 +210,10 @@ end
 frequency = frequency or 10
 local function start(N)
     frequency = tonumber(N) or frequency
-    if eventful.onJobCompleted.workorder_repeat_job_immediately then
+    if eventful.onJobCompleted.workorder_job_repeater then
         log(DEBUG, "onJobCompleted event handler was present and is overwritten")
     end
-    eventful.onJobCompleted.workorder_repeat_job_immediately = function(job)
+    eventful.onJobCompleted.workorder_job_repeater = function(job)
         log(DEBUG, "job completed: " .. dfhack.job.getName(job) .. " (id " .. job.id .. ", job.order_id " .. job.order_id .. ")")
         local order_id = job.order_id
         local order = order_id > 0 and findManagerOrderById(order_id)
@@ -230,7 +230,7 @@ local function start(N)
 end
 
 local function stop()
-    eventful.onJobCompleted.workorder_repeat_job_immediately = nil
+    eventful.onJobCompleted.workorder_job_repeater = nil
 
     log(INFO, "stopped")
 end
