@@ -144,7 +144,13 @@ local function repeatJob(order, job)
     -- step 0: adjust what we can right now
     job.flags.working = false
     job.completion_timer = -1
-    job.items:resize(0) -- remove old items we worked upon
+
+    -- remove old items we worked upon
+    log(DEBUG, "Freeing old items")
+    for _, item in pairs(job.items) do
+        item:delete()
+    end
+    job.items:resize(0)
 
     local workshop = nil
     local ixs = {}
@@ -162,8 +168,9 @@ local function repeatJob(order, job)
             ixs[ix] = true
         end
     end
-    for ix in pairs(ixs) do
-        log(DEBUG, "Removing from gref: ", job.general_refs[ix])
+    for ix, gref in pairs(ixs) do
+        log(DEBUG, "Removing gref ", gref)
+        gref:delete()
         job.general_refs:erase(ix)
     end
     log(DEBUG, "#gref: " .. #job.general_refs .. " (should be 1)")
@@ -185,7 +192,7 @@ local function repeatJob(order, job)
 
     -- step 3: if a building is associated with the work order, find it
     if order.workshop_id < 0 then
-        log(DEBUG, "Ignore work orders not associated with workshops")
+        log(DEBUG, "This work order is not associated with a workshop: done.")
         return
     end
 
