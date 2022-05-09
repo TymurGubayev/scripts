@@ -14,19 +14,18 @@ work orders). This script makes the dwarfes work harder.
 For best experience add following to your ``onMapLoad*.init``::
 
     workorder-job-repeater start
-    
-**Usage**:
 
-``[enable | disable] workorder-job-repeater``
+**Usage**:
 
 ``workorder-job-repeater start [<frequency>] | stop``
 
 ``workorder-job-repeater --frequency <ticks> | --verbose | --help``
 
-:enable, start <frequency>: starts job monitoring, running every ``<frequency>`` ticks (default: 10).
-:disable, stop:             stops the script.
+:start <frequency>:         starts job monitoring, running every ``<frequency>`` ticks (default: 10).
+:stop:                      stops the script.
 
 -f, --frequency <ticks>     sets job monitoring frequency to ``<ticks>``
+                            (default is every 10 ticks)
 -v, --verbose               toggles script's verbosity.
 -h, --help                  this help.
 
@@ -65,7 +64,7 @@ local findManagerOrderById = function (id)
             return o
         end
     end
-    log(WARN, "Couldn't find work order (cancelled?)", id)
+    log(WARN, "Couldn't find work order", id)
     return nil
 end
 
@@ -97,7 +96,7 @@ local function addJobToPostings(job)
             posting.job = job
             posting.anon_1 = 0
             posting.flags.dead = false
-            
+
             job.posting_index = posting.idx
             addedIndex = posting.idx
             break
@@ -108,7 +107,7 @@ local function addJobToPostings(job)
     else
         log(DEBUG, "Couldn't find posting slot to add in job " .. job.id)
     end
-    
+
     return addedIndex
 end
 
@@ -118,22 +117,22 @@ local function repeatJob(order, job)
         qerror("job or order is nil")
         return
     end
-    
+
     if only_infty and 0 ~= order.amount_total then
         log(DEBUG, "skipping job " .. dfhack.job.getName(job) .. " (id " .. job.id .. "): order.amount_total > 0")
         return
     end
-    
+
     if not (order.status.validated and order.status.active) then
         log(DEBUG, "skipping job " .. dfhack.job.getName(job) .. " (id " .. job.id .. ") from order " .. order.id .. " because of order.status")
         return
     end
-    
+
     -- for debug purposes: pause the game
     --df.global.pause_state = true
 
     log(DEBUG, "Repeat job " .. dfhack.job.getName(job) .. " (id " .. job.id .. ") from order " .. order.id)
-    
+
     -- we need a clone because original(which itself is a copy) is destroyed or something.
     -- cloneJobStruct doesn't copy flags over.
     local by_manager = job.flags.by_manager
@@ -141,12 +140,12 @@ local function repeatJob(order, job)
     job = dfhack.job.cloneJobStruct(job)
     job.flags.by_manager = by_manager
     job.flags.do_now = do_now
-    
+
     -- step 0: adjust what we can right now
     job.flags.working = false
     job.completion_timer = -1
     job.items:resize(0) -- remove old items we worked upon
-    
+
     local workshop = nil
     local ixs = {}
     for ix, gref in ipairs(job.general_refs) do
@@ -168,14 +167,14 @@ local function repeatJob(order, job)
         job.general_refs:erase(ix)
     end
     log(DEBUG, "#gref: " .. #job.general_refs .. " (should be 1)")
-    
+
     -- step 1: associate a posting with it
     local ok = addJobToPostings(job)
     if not ok then
         log(ERROR, "Couldn't add job of order.id " .. order.id .. " to a posting")
         return
     end
-    
+
     -- step 2: add the job to the job list
     local ok = dfhack.job.linkIntoWorld(job, false) -- we don't need a new id, I think?
     if not ok then -- fallback just in case
@@ -189,13 +188,13 @@ local function repeatJob(order, job)
         log(DEBUG, "Ignore work orders not associated with workshops")
         return
     end
-    
+
     if not workshop then
         log(WARN, "No workshop despite order.workshop_id " .. order.workshop_id .. " -- restoring")
         workshop = findBuildingById(order.workshop_id)
     end
     log(DEBUG, "Associated workshop: " .. workshop.id)
-    
+
     -- step 4: add this job to the workshop's job list.
     workshop.jobs:insert('#', job)
     log(DEBUG, "Added job " .. job.id .. " to workshop.jobs")
@@ -225,21 +224,11 @@ end
 
 local function stop()
     eventful.onJobCompleted.workorder_repeat_job_immediately = nil
-    
+
     log(INFO, "stopped")
 end
 
 -- arguments handling
-
---@ enable = true
-if dfhack_flags.enable then
-    if dfhack_flags.enable_state then
-        start()
-    else
-        stop()
-    end
-    return
-end
 
 local need_action = true
 local help = false
