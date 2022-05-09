@@ -231,7 +231,7 @@ function petitions:init(args)
         widgets.Label{
             view_id = 'text',
             frame_inset = 0,
-            text = '',
+            show_scroll_icons = 'right',
         },
     }
     
@@ -264,7 +264,7 @@ function petitions:refresh()
         end
     end
     
-    self.frame_width = math.max(label:getTextWidth(), self.min_frame_width)
+    self.frame_width = math.max(label:getTextWidth()+1, self.min_frame_width)
     self.frame_width = math.min(df.global.gps.dimx - 2, self.frame_width)
     self:onResize(dfhack.screen.getWindowSize()) -- applies new frame_width
 end
@@ -273,17 +273,6 @@ function petitions:onRenderFrame(painter, frame)
     petitions.super.onRenderFrame(self, painter, frame)
     
     painter:seek(frame.x1+2, frame.y1 + frame.height-1):key_string('CUSTOM_F', "toggle fulfilled")
-    
-    local label = self.subviews.text
-    if label:getTextHeight() > label.frame_body.height then
-        if label.start_line_num ~= 1 then
-            painter:seek(frame.x2, frame.y1+1):string(string.char(24), COLOR_LIGHTCYAN) -- up arrow
-        end
-        local last_visible_line = label.start_line_num + label.frame_body.height - 1
-        if last_visible_line < label:getTextHeight() then
-            painter:seek(frame.x2, frame.y2-1):string(string.char(25), COLOR_LIGHTCYAN) -- down arrow
-        end
-    end
 end
 
 function petitions:onInput(keys)
