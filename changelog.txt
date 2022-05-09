@@ -16,6 +16,7 @@ that repo.
 ## New Scripts
 
 - `workorder-job-repeater`: makes dwarfes work harder on infinite work orders
+- `gui/petitions`: shows list of fort's petitions
 
 ## Fixes
 
