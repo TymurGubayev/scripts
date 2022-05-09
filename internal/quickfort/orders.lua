@@ -101,7 +101,7 @@ local function process_filter(order_specs, filter, reactions)
         label = 'iron spear'
     end
     if not label then
-        print('unhandled filter:')
+        dfhack.printerr('unhandled filter:')
         printall_recurse(filter)
         error('quickfort out of sync with DFHack filters; please file a bug')
     end
@@ -126,7 +126,7 @@ function create_orders(ctx)
         if not ctx.dry_run then
             stockflow.create_orders(order_spec.order, quantity)
         end
-        table.insert(ctx.stats, {label=k, value=quantity})
+        table.insert(ctx.stats, {label=k, value=quantity, is_order=true})
     end
 end
 

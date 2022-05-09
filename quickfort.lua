@@ -22,7 +22,7 @@ real" in Dwarf Fortress, and then export your map using the DFHack
 should go in the ``blueprints`` subfolder in the main DF folder.
 
 For more details on blueprint file syntax, see the `quickfort-blueprint-guide`
-or browse through the ready-to-use examples in the `quickfort-library-guide`.
+or browse through the ready-to-use examples in the `blueprint-library-guide`.
 
 Usage:
 
@@ -42,10 +42,10 @@ Usage:
     "-m build") and/or strings to search for in a path, filename, mode, or
     comment. The id numbers in the list may not be contiguous if there are
     hidden or filtered blueprints that are not being shown.
-**quickfort gui [-l|-\-library] [-h|-\-hidden] [search string]**
-    Starts the quickfort dialog, where you can run blueprints from an
-    interactive list. The optional arguments have the same meanings as they do
-    in the ``list`` command, and can be used to preset the gui dialog state.
+**quickfort gui [filename or search terms]**
+    Invokes the quickfort UI with the specified parameters, giving you an
+    interactive blueprint preview to work with before you apply it to the map.
+    See the `gui/quickfort` documentation for details.
 **quickfort <command>[,<command>...] <list_num>[,<list_num>...] [<options>]**
     Applies the blueprint(s) with the number(s) from the ``list`` command.
 **quickfort <command>[,<command>...] <filename> [-n|-\-name <name>[,<name>...]] [<options>]**
@@ -148,9 +148,10 @@ not change the configuration stored in the file:
     halt or skip keycode playback. Checks include ensuring a configurable
     building exists at the designated cursor position and verifying the active
     UI screen is the same before and after sending keys for the cursor
-    position. Temporarily enable this if you are running a query blueprint that
-    sends a key sequence that is *not* related to stockpile or building
-    configuration. Most players will never need to enable this setting.
+    position. If you find you need to enable this for one of your own
+    blueprints, you should probably be using a
+    `config blueprint <quickfort-config-blueprints>`, not a query blueprint.
+    Most players will never need to enable this setting.
 ``stockpiles_max_barrels``, ``stockpiles_max_bins``, and ``stockpiles_max_wheelbarrows`` (defaults: -1, -1, 0)
     Set to the maximum number of resources you want assigned to stockpiles of
     the relevant types. Set to -1 for DF defaults (number of stockpile tiles
@@ -183,13 +184,15 @@ statistics structure is a map of stat ids to ``{label=string, value=number}``.
 :``mode``: (required) The name of the blueprint mode, e.g. 'dig', 'build', etc.
 :``data``: (required) A sparse map populated such that ``data[z][y][x]`` yields
     the blueprint text that should be applied to the tile at map coordinate
-    ``(x, y, z)``.
+    ``(x, y, z)``. You can also just pass a string and it will be interpreted
+    as the value of ``data[0][0][0]``.
 :``command``: The quickfort command to execute, e.g. 'run', 'orders', etc.
     Defaults to 'run'.
 :``pos``: A coordinate that serves as the reference point for the coordinates in
     the data map. That is, the text at ``data[z][y][x]`` will be shifted to be
     applied to coordinate ``(pos.x + x, pos.y + y, pos.z + z)``. If not
-    specified, defaults to ``{x=0, y=0, z=0}``.
+    specified, defaults to ``{x=0, y=0, z=0}``, which means that the coordinates
+    in the ``data`` map are used directly.
 :``aliases``: a map of query blueprint aliases names to their expansions. If not
     specified, defaults to ``{}``.
 :``preserve_engravings``: Don't designate tiles for digging if they have an
@@ -222,7 +225,7 @@ local quickfort_build = reqscript('internal/quickfort/build')
 local quickfort_building = reqscript('internal/quickfort/building')
 local quickfort_command = reqscript('internal/quickfort/command')
 local quickfort_common = reqscript('internal/quickfort/common')
-local quickfort_dialog = reqscript('internal/quickfort/dialog')
+local quickfort_config = reqscript('internal/quickfort/config')
 local quickfort_dig = reqscript('internal/quickfort/dig')
 local quickfort_keycodes = reqscript('internal/quickfort/keycodes')
 local quickfort_list = reqscript('internal/quickfort/list')
@@ -232,9 +235,11 @@ local quickfort_notes = reqscript('internal/quickfort/notes')
 local quickfort_orders = reqscript('internal/quickfort/orders')
 local quickfort_parse = reqscript('internal/quickfort/parse')
 local quickfort_place = reqscript('internal/quickfort/place')
+local quickfort_preview = reqscript('internal/quickfort/preview')
 local quickfort_query = reqscript('internal/quickfort/query')
 local quickfort_reader = reqscript('internal/quickfort/reader')
 local quickfort_set = reqscript('internal/quickfort/set')
+local quickfort_transform = reqscript('internal/quickfort/transform')
 local quickfort_zone = reqscript('internal/quickfort/zone')
 
 -- keep this in sync with the full help text above
@@ -252,10 +257,10 @@ quickfort list [-m|--mode <mode>] [-l|--library] [-h|--hidden] [search string]
     blueprints and -h to include hidden blueprints. The list can be filtered by
     a specified mode (e.g. "-m build") and/or strings to search for in a path,
     filename, mode, or comment.
-quickfort gui [-l|--library] [-h|--hidden] [search string]
-    Starts the quickfort dialog, where you can run blueprints from an
-    interactive list. The optional arguments have the same meanings as they do
-    in the list command, and can be used to preset the gui dialog state.
+quickfort gui [filename or search terms]
+    Invokes the quickfort UI with the specified parameters, giving you an
+    interactive blueprint preview to work with before you apply it to the map.
+    See the gui/quickfort documentation for details.
 quickfort <command>[,<command>...] <list_num>[,<list_num>...] [<options>]
     Applies the blueprint(s) with the number(s) from the list command.
 quickfort <command>[,<command>...] <filename> [-n|--name <name>[,<name>...]] [<options>]
@@ -320,11 +325,8 @@ end
 -- public API
 function apply_blueprint(params)
     local data, cursor = quickfort_api.normalize_data(params.data, params.pos)
-    local preserve_engravings = quickfort_parse.parse_preserve_engravings(
-                params.preserve_engravings or df.item_quality.Masterful, true)
-    local ctx = quickfort_command.init_ctx(params.command or 'run', 'API',
-                                cursor, params.aliases or {}, params.dry_run,
-                                preserve_engravings)
+    local ctx = quickfort_api.init_api_ctx(params, cursor)
+
     quickfort_common.verbose = not not params.verbose
     dfhack.with_finalize(
         function() quickfort_common.verbose = false end,
@@ -341,11 +343,15 @@ if dfhack_flags.module then
     return
 end
 
+local function do_gui(params)
+    dfhack.run_script('gui/quickfort', table.unpack(params))
+end
+
 local action_switch = {
     set=quickfort_set.do_set,
     reset=quickfort_set.do_reset,
     list=quickfort_list.do_list,
-    gui=quickfort_dialog.do_dialog,
+    gui=do_gui,
     run=quickfort_command.do_command,
     orders=quickfort_command.do_command,
     undo=quickfort_command.do_command
@@ -356,4 +362,11 @@ local args = {...}
 local action = table.remove(args, 1) or 'help'
 args.commands = argparse.stringList(action)
 
-action_switch[args.commands[1]](args)
+local action_fn = action_switch[args.commands[1]]
+
+if (action == 'run' or action == 'orders' or action == 'undo') and
+        not dfhack.isMapLoaded() then
+    qerror('quickfort needs a fortress map to be loaded.')
+end
+
+action_fn(args)
