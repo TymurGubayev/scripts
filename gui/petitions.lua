@@ -159,7 +159,7 @@ local function getAgreementDetails(a)
             sb[#sb+1] = ("(this was " .. diff:getMonths() .. " months and " ..  diff:getDayInMonth() .. " days ago)" )
         end
         sb[#sb+1] = NEWLINE
-        
+
         sb[#sb+1] = ("Petition type: " .. df.agreement_details_type[d.type])
         sb[#sb+1] = NEWLINE
         if d.type == df.agreement_details_type.Location then
@@ -190,9 +190,9 @@ local function getAgreementDetails(a)
     else
         petition.status = 'ACCEPTED'
     end
-    
+
     petition.text = sb
-    
+
     return petition
 end
 
@@ -209,7 +209,7 @@ local getAgreements = function()
             end
         end
     end
-    
+
     return list
 end
 
@@ -234,7 +234,7 @@ function petitions:init(args)
             show_scroll_icons = 'right',
         },
     }
-    
+
     self:refresh()
 end
 
@@ -255,7 +255,7 @@ function petitions:refresh()
 
     local label = self.subviews.text
     label:setText(lines)
-    
+
     -- changing text doesn't automatically change scroll position
     if label.frame_body then
         local last_visible_line = label.start_line_num + label.frame_body.height - 1
@@ -263,7 +263,7 @@ function petitions:refresh()
             label.start_line_num = math.max(label:getTextHeight() - label.frame_body.height + 1, 1)
         end
     end
-    
+
     self.frame_width = math.max(label:getTextWidth()+1, self.min_frame_width)
     self.frame_width = math.min(df.global.gps.dimx - 2, self.frame_width)
     self:onResize(dfhack.screen.getWindowSize()) -- applies new frame_width
@@ -271,7 +271,7 @@ end
 
 function petitions:onRenderFrame(painter, frame)
     petitions.super.onRenderFrame(self, painter, frame)
-    
+
     painter:seek(frame.x1+2, frame.y1 + frame.height-1):key_string('CUSTOM_F', "toggle fulfilled")
 end
 
