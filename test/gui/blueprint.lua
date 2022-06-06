@@ -398,7 +398,9 @@ function test.name_no_collision()
             local name_help_text_pos = {x=name_help_label.frame_body.x1+2,
                                         y=name_help_label.frame_body.y1}
             view:onRender()
-            expect.eq('Set', get_screen_word(name_help_text_pos))
+            if name_help_label.visible then
+                expect.eq('Set', get_screen_word(name_help_text_pos))
+            end
             send_keys('LEAVESCREEN') -- cancel ui
         end)
 
@@ -413,8 +415,10 @@ function test.name_no_collision()
             local name_help_text_pos = {x=name_help_label.frame_body.x1+2,
                                         y=name_help_label.frame_body.y1}
             view:onRender()
-            expect.eq('Set', get_screen_word(name_help_text_pos),
-                      'dirname does not conflict with similar filename')
+            if name_help_label.visible then
+                expect.eq('Set', get_screen_word(name_help_text_pos),
+                          'dirname does not conflict with similar filename')
+            end
             send_keys('LEAVESCREEN') -- cancel ui
         end)
 end
