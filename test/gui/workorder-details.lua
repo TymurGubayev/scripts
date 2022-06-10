@@ -27,10 +27,7 @@ function test.changeOrderDetails()
     expect.true_(df.viewscreen_jobmanagementst:is_instance(dfhack.gui.getCurViewscreen(true)), "We need to be in the jobmanagement/Main screen")
 
     --- create an order
-    send_keys('MANAGER_NEW_ORDER')
-    for i = 1, 5 do send_keys('STANDARDSCROLL_DOWN') end -- move cursor to CUT SLADE
-    send_keys('SELECT') -- select it
-    send_keys('SELECT') -- accept 0 quantity = perpetual order
+    dfhack.run_command [[workorder "{ \"frequency\" : \"OneTime\", \"job\" : \"CutGems\", \"material\" : \"INORGANIC:SLADE\" }"]]
     wait()
     send_keys('STANDARDSCROLL_UP') -- move cursor to newly created CUT SLADE
     wait()
