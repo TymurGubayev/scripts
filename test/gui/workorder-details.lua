@@ -26,6 +26,8 @@ function test.changeOrderDetails()
     send_keys('D_JOBLIST', 'UNITJOB_MANAGER')
     expect.true_(df.viewscreen_jobmanagementst:is_instance(dfhack.gui.getCurViewscreen(true)), "We need to be in the jobmanagement/Main screen")
 
+    local ordercount = #df.global.world.manager_orders
+
     --- create an order
     dfhack.run_command [[workorder "{ \"frequency\" : \"OneTime\", \"job\" : \"CutGems\", \"material\" : \"INORGANIC:SLADE\" }"]]
     wait()
@@ -64,6 +66,7 @@ function test.changeOrderDetails()
     -- cleanup
     wait()
     send_keys('LEAVESCREEN', 'LEAVESCREEN', 'MANAGER_REMOVE')
+    expect.eq(ordercount, #df.global.world.manager_orders, "Test order should've been removed")
     -- go back to map screen
     wait()
     send_keys('LEAVESCREEN', 'LEAVESCREEN')
