@@ -15,6 +15,26 @@ local wait = function(n)
     --delay(n or 30) -- enable for debugging the tests
 end
 
+-- handle confirm plugin: we may need to additionally confirm order removal
+local confirm = require 'plugins.confirm'
+local confirmRemove = function() end
+if confirm.isEnabled() then
+    for _, c in pairs(confirm.get_conf_data()) do
+        if c.id == 'order-remove' then
+            if c.enabled then
+                confirmRemove = function()
+                    wait()
+                    -- without delays `confirm` can miss the key event
+                    delay(5)
+                    send_keys('SELECT')
+                    delay(5)
+                end
+            end
+            break
+        end
+    end
+end
+
 function test.changeOrderDetails()
     --[[ this is not needed because of how gui.simulateInput'D_JOBLIST' works
     -- verify expected starting state
@@ -66,6 +86,7 @@ function test.changeOrderDetails()
     -- cleanup
     wait()
     send_keys('LEAVESCREEN', 'LEAVESCREEN', 'MANAGER_REMOVE')
+    confirmRemove()
     expect.eq(ordercount, #df.global.world.manager_orders, "Test order should've been removed")
     -- go back to map screen
     wait()
