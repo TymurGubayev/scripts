@@ -92,3 +92,64 @@ function test.changeOrderDetails()
     wait()
     send_keys('LEAVESCREEN', 'LEAVESCREEN')
 end
+
+-- where flags is a table of key-boolean
+local function any_flag(flags)
+    for f, v in pairs(flags) do
+        if v then return f end
+    end
+    return false
+end
+
+function test.unsetAllItemTraits()
+    -- get into the orders screen
+    send_keys('D_JOBLIST', 'UNITJOB_MANAGER')
+    expect.true_(df.viewscreen_jobmanagementst:is_instance(dfhack.gui.getCurViewscreen(true)), "We need to be in the jobmanagement/Main screen")
+
+    local ordercount = #df.global.world.manager_orders
+
+    --- create an order
+    dfhack.run_command [[workorder "{ \"frequency\" : \"OneTime\", \"job\" : \"CutGems\", \"material\" : \"INORGANIC:SLADE\" }"]]
+    wait()
+    send_keys('STANDARDSCROLL_UP') -- move cursor to newly created CUT SLADE
+    wait()
+    send_keys('MANAGER_DETAILS')
+    expect.true_(df.viewscreen_workquota_detailsst:is_instance(dfhack.gui.getCurViewscreen(true)), "We need to be in the workquota_details screen")
+    local job = dfhack.gui.getCurViewscreen(true).order
+    local item = job.items[0]
+
+    dfhack.run_command 'gui/workorder-details'
+
+    -- manually set some traits
+    item.flags1.improvable = true
+    item.flags2.allow_artifact = true
+    item.flags3.unimproved = true
+    item.has_tool_use = 0 -- LIQUID_COOKING
+    item.has_material_reaction_product = 'BAG_ITEM'
+    item.metal_ore = 0 -- iron
+    item.reaction_class = 'CALCIUM_CARBONATE'
+
+    wait()
+    send_keys('CUSTOM_T')
+    wait()
+    send_keys('SELECT') -- cursor is at 'no traits'
+    wait()
+    send_keys('LEAVESCREEN')
+
+    expect.false_(any_flag(item.flags1), "A flag in item.flags1 is set")
+    expect.false_(any_flag(item.flags2), "A flag in item.flags2 is set")
+    expect.false_(any_flag(item.flags3), "A flag in item.flags3 is set")
+    expect.eq(-1, item.has_tool_use, "Tool use is not reset")
+    expect.eq('', item.has_material_reaction_product, "Material reaction product is not reset")
+    expect.eq(-1, item.metal_ore, "Metal ore is not reset")
+    expect.eq('', item.reaction_class, "Reaction class is not reset")
+
+    -- cleanup
+    wait()
+    send_keys('LEAVESCREEN', 'LEAVESCREEN', 'MANAGER_REMOVE')
+    confirmRemove()
+    expect.eq(ordercount, #df.global.world.manager_orders, "Test order should've been removed")
+    -- go back to map screen
+    wait()
+    send_keys('LEAVESCREEN', 'LEAVESCREEN')
+end
