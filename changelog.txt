@@ -16,7 +16,6 @@ that repo.
 ## New Scripts
 
 - `gui/workorder-details`: adjusts work orders' input item, material, traits
-- `assign-minecarts`: assign minecarts to hauling routes that don't have one
 
 ## Fixes
 
