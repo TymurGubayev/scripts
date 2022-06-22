@@ -171,101 +171,12 @@ function JobDetails:canChangeTrait()
     return obj ~= nil and not is_caste_mat(obj.iobj)
 end
 
-function JobDetails:toggleFlag(obj, ffield, flag)
-    local job_item = obj.iobj
-    job_item[ffield][flag] = not job_item[ffield][flag]
-end
-
-function JobDetails:toggleToolUse(obj, tool_use)
-    local job_item = obj.iobj
-    tool_use = df.tool_uses[tool_use]
-    if job_item.has_tool_use == tool_use then
-        job_item.has_tool_use = df.tool_uses.NONE
-    else
-        job_item.has_tool_use = tool_use
-    end
-end
-
-function JobDetails:toggleMetalOre(obj, ore_ix)
-    local job_item = obj.iobj
-    if job_item.metal_ore == ore_ix then
-        job_item.metal_ore = -1
-    else
-        job_item.metal_ore = ore_ix
-    end
-end
-
-function JobDetails:toggleReactionClass(obj, reaction_class)
-    local job_item = obj.iobj
-    if job_item.reaction_class == reaction_class then
-        job_item.reaction_class = ''
-    else
-        job_item.reaction_class = reaction_class
-    end
-end
-
-function JobDetails:toggleProductMaterial(obj, product_materials)
-    local job_item = obj.iobj
-    if job_item.has_material_reaction_product == product_materials then
-        job_item.has_material_reaction_product = ''
-    else
-        job_item.has_material_reaction_product = product_materials
-    end
-end
-
-function JobDetails:unsetFlags(obj)
-    local job_item = obj.iobj
-    for flag, ffield in pairs(job_item_flags_map) do
-        if job_item[ffield][flag] then
-            JobDetails:toggleFlag(obj, ffield, flag)
-        end
-    end
-end
-
-function JobDetails:setTrait(obj, sel)
-    if sel.ffield then
-        --print('toggle flag', sel.ffield, sel.flag)
-        JobDetails:toggleFlag(obj, sel.ffield, sel.flag)
-    elseif sel.reset_flags then
-        --print('reset every flag')
-        JobDetails:unsetFlags(obj)
-    elseif sel.tool_use then
-        --print('toggle tool_use', sel.tool_use)
-        JobDetails:toggleToolUse(obj, sel.tool_use)
-    elseif sel.ore_ix then
-        --print('toggle ore', sel.ore_ix)
-        JobDetails:toggleMetalOre(obj, sel.ore_ix)
-    elseif sel.reaction_class then
-        --print('toggle reaction class', sel.reaction_class)
-        JobDetails:toggleReactionClass(obj, sel.reaction_class)
-    elseif sel.product_materials then
-        --print('toggle product materials', sel.product_materials)
-        JobDetails:toggleProductMaterial(obj, sel.product_materials)
-    elseif sel.reset_all_traits then
-        --print('reset every trait')
-        -- flags
-        JobDetails:unsetFlags(obj)
-        -- tool use
-        JobDetails:toggleToolUse(obj, 'NONE')
-        -- metal ore
-        JobDetails:toggleMetalOre(obj, -1)
-        -- reaction class
-        JobDetails:toggleReactionClass(obj, '')
-        -- producing
-        JobDetails:toggleProductMaterial(obj, '')
-    else
-        print('unknown sel')
-        printall(sel)
-    end
-end
-
 function JobDetails:onChangeTrait()
     local idx, obj = self.subviews.list:getSelected()
     guimat.ItemTraitsDialog{
         job_item = obj.iobj,
         prompt = 'Please select traits for input '..idx,
         none_caption = 'no traits',
-        on_select = self:callback('setTrait', obj)
     }:show()
 end
 
