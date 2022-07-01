@@ -24,10 +24,7 @@ if confirm.isEnabled() then
             if c.enabled then
                 confirmRemove = function()
                     wait()
-                    -- without delays `confirm` can miss the key event
-                    delay(5)
-                    send_keys('SELECT')
-                    delay(5)
+                    send_keys('CUSTOM_P', 'MANAGER_REMOVE')
                 end
             end
             break
