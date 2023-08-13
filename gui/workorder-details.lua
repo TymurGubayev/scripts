@@ -171,7 +171,7 @@ end
 
 local function show_job_details()
     local scr = ScrJobDetails()
-    if not scr.open -- dfhack.gui.matchFocusString('dwarfmode/JobDetails') 
+    if not scr.open -- dfhack.gui.matchFocusString('dwarfmode/JobDetails')
         or scr.context ~= df.job_details_context_type.MANAGER_WORK_ORDER
     then
         qerror("This script needs to be run from a work order details screen")
