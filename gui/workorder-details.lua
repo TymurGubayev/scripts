@@ -1,33 +1,18 @@
 -- adjust work orders' input item, material, traits
---[====[
 
-gui/workorder-details
-=====================
-Adjust input items, material, or traits for work orders. Actual
-jobs created for it will inherit the details.
-
-This is the equivalent of `gui/workshop-job` for work orders,
-with the additional possibility to set input items' traits.
-
-It has to be run from a work order's detail screen
-(:kbd:`j-m`, select work order, :kbd:`d`).
-
-For best experience add the following to your ``dfhack*.init``::
-
-    keybinding add D@workquota_details gui/workorder-details
-
-]====]
+--@ module = true
 
 --[[
 Credit goes to the author of `gui/workshop-job`, it showed
 me the way. Also, a huge chunk of code could be reused.
 ]]
 
+local overlay = require('plugins.overlay')
+
 local utils = require 'utils'
 local gui = require 'gui'
 local guimat = require 'gui.materials'
 local widgets = require 'gui.widgets'
-local dlg = require 'gui.dialogs'
 
 local wsj = reqscript 'gui/workshop-job'
 
@@ -180,11 +165,70 @@ function JobDetails:onChangeTrait()
     }:show()
 end
 
-local scr = dfhack.gui.getCurViewscreen()
-if not df.viewscreen_workquota_detailsst:is_instance(scr) then
-    qerror("This script needs to be run from a work order details screen")
+local function ScrJobDetails()
+    return df.global.game.main_interface.job_details
 end
 
--- by opening the viewscreen_workquota_detailsst the
--- work order's .items array is initialized
-JobDetails{ job = scr.order }:show()
+local function show_job_details()
+    local scr = ScrJobDetails()
+    if not scr.open -- dfhack.gui.matchFocusString('dwarfmode/JobDetails') 
+        or scr.context ~= df.job_details_context_type.MANAGER_WORK_ORDER
+    then
+        qerror("This script needs to be run from a work order details screen")
+    end
+
+    -- by opening the viewscreen_workquota_detailsst the
+    -- work order's .items array is initialized
+    JobDetails{ job = scr.wq }:show()
+end
+
+-- -------------------
+-- RecheckOverlay
+--
+
+local focusStrings = 'dwarfmode/JobDetails'
+
+DetailsHotkeyOverlay = defclass(DetailsHotkeyOverlay, overlay.OverlayWidget)
+DetailsHotkeyOverlay.ATTRS{
+    default_pos={x=5,y=7},
+    default_enabled=true,
+    viewscreens=focusStrings,
+    frame={w=1+6+2+(7)+1, h=3},
+}
+
+function DetailsHotkeyOverlay:init()
+    self:addviews{
+        widgets.TextButton{
+            view_id = 'button',
+            frame={t=0, l=0, r=0, h=1},
+            label='details',
+            key='CUSTOM_CTRL_D',
+            on_activate=show_job_details,
+        },
+    }
+end
+
+function DetailsHotkeyOverlay:onRenderBody(dc)
+    local scr = ScrJobDetails()
+
+    if (scr.context ~= df.job_details_context_type.MANAGER_WORK_ORDER) then
+        self.subviews.button.visible = false
+        return
+    else
+        self.subviews.button.visible = true
+    end
+
+    DetailsHotkeyOverlay.super.onRenderBody(self, dc)
+end
+
+-- -------------------
+
+OVERLAY_WIDGETS = {
+    details=DetailsHotkeyOverlay,
+}
+
+if dfhack_flags.module then
+    return
+end
+
+show_job_details()
