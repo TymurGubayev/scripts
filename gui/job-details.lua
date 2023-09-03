@@ -185,7 +185,7 @@ function JobDetails:initListChoices()
             self.list:setChoices({})
             return
         end
-    
+
         job_items = self.job.items
         for i,iobj in ipairs(job_items) do
             local head = 'Item '..(i+1)..' x'..iobj.quantity
