@@ -14,6 +14,7 @@ local utils = require 'utils'
 local gui = require 'gui'
 local guimat = require 'gui.materials'
 local widgets = require 'gui.widgets'
+local dlg = require 'gui.dialogs'
 
 JobDetails = defclass(JobDetails, gui.ZScreenModal)
 
