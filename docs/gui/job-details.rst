@@ -5,7 +5,8 @@ gui/job-details
     :summary: Adjust the input materials and traits used for a job or manager order.
     :tags: fort inspection jobs workorders interface
 
-This tool allows you to inspect or change the input reagents for the selected job.
+This tool allows you to inspect or change the input reagents for the selected job:
+open the job's "Details" screen by clicking the magnifying glass, then press :kbd:`Ctrl-D`.
 
 Pressing :kbd:`i` shows a dialog where you can select an item type from a list.
 
