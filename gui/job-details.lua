@@ -359,8 +359,7 @@ local function show_job_details()
         qerror("Unhandled screen context: ".. df.job_details_context_type[scr.context])
     end
 
-    local dlg = JobDetails{ job = job, context = scr.context }
-    dlg:show()
+    JobDetails{ job = job, context = scr.context }:show()
 end
 
 -- --------------------
