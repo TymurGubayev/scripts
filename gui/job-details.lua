@@ -395,40 +395,17 @@ function DetailsHotkeyOverlay:init()
     }
 end
 
-local function isManagerOrderScreen()
-    local scr = ScrJobDetails()
-    return scr.context == df.job_details_context_type.MANAGER_WORK_ORDER
-end
-
 DetailsHotkeyOverlay_ManagerWorkOrder = defclass(DetailsHotkeyOverlay_ManagerWorkOrder, DetailsHotkeyOverlay)
 DetailsHotkeyOverlay_ManagerWorkOrder.ATTRS{
     default_pos={x=5, y=5}, -- {x=5, y=5} is right above the job title
+    viewscreens='dwarfmode/JobDetails/MANAGER_WORK_ORDER',
 }
-function DetailsHotkeyOverlay_ManagerWorkOrder:onRenderBody(dc)
-    if isManagerOrderScreen() then
-        self.subviews.button.visible = true
-    else
-        self.subviews.button.visible = false
-        return
-    end
-
-    DetailsHotkeyOverlay.super.onRenderBody(self, dc)
-end
 
 DetailsHotkeyOverlay_BuildingTask = defclass(DetailsHotkeyOverlay_BuildingTask, DetailsHotkeyOverlay)
 DetailsHotkeyOverlay_BuildingTask.ATTRS{
-    default_pos={x=-123, y=6}, -- {x=-123, y=6} is right above the job title on all but smallest widths
+    default_pos={x=-120, y=6}, -- {x=-120, y=6} is right above the job title on all but smallest widths
+    viewscreens='dwarfmode/JobDetails/BUILDING_TASK_LIST',
 }
-function DetailsHotkeyOverlay_BuildingTask:onRenderBody(dc)
-    if not isManagerOrderScreen() then
-        self.subviews.button.visible = true
-    else
-        self.subviews.button.visible = false
-        return
-    end
-
-    DetailsHotkeyOverlay.super.onRenderBody(self, dc)
-end
 
 -- -------------------
 
