@@ -374,7 +374,13 @@ DetailsHotkeyOverlay.ATTRS{
     default_pos={x=0,y=0},
     default_enabled=true,
     viewscreens=focusStrings,
-    frame={w=1+6+2+(7)+1, h=3},
+    frame={w= 1   -- [
+            + 6   -- Ctrl+d
+            + 2   -- :_
+            + (7) -- details
+            + 1   -- ]
+         , h= 1
+        },
 }
 
 function DetailsHotkeyOverlay:init()
