@@ -366,17 +366,18 @@ end
 -- DetailsHotkeyOverlay
 --
 
-local focusStrings = 'dwarfmode/JobDetails'
+local LABEL_TEXT = 'Configure job inputs'
+local LABEL_TEXT_LENGTH = string.len( LABEL_TEXT )
 
 DetailsHotkeyOverlay = defclass(DetailsHotkeyOverlay, overlay.OverlayWidget)
 DetailsHotkeyOverlay.ATTRS{
     default_pos={x=0,y=0},
     default_enabled=true,
-    viewscreens=focusStrings,
+    viewscreens="override this in a subclass",
     frame={w= 1   -- [
             + 6   -- Ctrl+d
             + 2   -- :_
-            + (7) -- details
+            + LABEL_TEXT_LENGTH -- LABEL_TEXT
             + 1   -- ]
          , h= 1
         },
@@ -387,7 +388,7 @@ function DetailsHotkeyOverlay:init()
         widgets.TextButton{
             view_id = 'button',
             frame={t=0, l=0, r=0, h=1},
-            label='details',
+            label=LABEL_TEXT,
             key='CUSTOM_CTRL_D',
             on_activate=show_job_details,
         },
