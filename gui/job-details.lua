@@ -54,13 +54,7 @@ function JobDetails:init(args)
         end
     end
 
-    local window = widgets.Window{
-        frame_title='Details',
-        resizable = true,
-        resize_min={w=50, h=20},
-        frame = { l = 10, w = 50 },
-    }
-    window:addviews{
+    self:addviews{
         widgets.Label{
             frame = { l = 0, t = 0 },
             text = {
@@ -92,14 +86,13 @@ function JobDetails:init(args)
             frame = { l = 0, b = 0 },
             text = {
                 { key = 'LEAVESCREEN', text = ': Back',
-                  on_activate = self:callback('dismiss')
+                  -- on_activate = self:callback('dismiss')
                 }
             }
         },
     }
 
-    self:addviews{window}
-    self.list = window.subviews.list
+    self.list = self.subviews.list
 
     self:initListChoices()
 
@@ -108,7 +101,7 @@ function JobDetails:init(args)
         + 4 * #self.list.choices -- list body
         + 2 -- LEAVESCREEN
         + 2 -- window border
-    window.frame.h = h
+    self.frame.h = h
 end
 
 local function describe_item_type(iobj)
