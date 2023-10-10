@@ -16,15 +16,26 @@ local guimat = require 'gui.materials'
 local widgets = require 'gui.widgets'
 local dlg = require 'gui.dialogs'
 
-JobDetails = defclass(JobDetails, gui.ZScreenModal)
+JobDetailsScreen = defclass(JobDetailsScreen, gui.ZScreenModal)
 
-JobDetails.focus_path = 'job-details'
+JobDetailsScreen.ATTRS {
+    focus_path = 'job-details',
+}
+
+function JobDetailsScreen:init(args)
+    self:addviews{JobDetails(args)}
+end
+
+JobDetails = defclass(JobDetails, widgets.Window)
 
 JobDetails.ATTRS {
+    frame_title='Details',
+    resizable = true,
+    resize_min={w=50, h=20},
+    frame = { l = 10, w = 50 },
+    --
     job = DEFAULT_NIL,
     context = DEFAULT_NIL,
-    frame_inset = 1,
-    frame_background = COLOR_BLACK,
 }
 
 function JobDetails:isManagerOrder()
@@ -359,7 +370,7 @@ local function show_job_details()
         qerror("Unhandled screen context: ".. df.job_details_context_type[scr.context])
     end
 
-    JobDetails{ job = job, context = scr.context }:show()
+    JobDetailsScreen{ job = job, context = scr.context }:show()
 end
 
 -- --------------------
