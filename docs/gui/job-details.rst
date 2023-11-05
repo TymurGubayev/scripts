@@ -6,7 +6,10 @@ gui/job-details
     :tags: fort inspection jobs workorders interface
 
 This tool allows you to inspect or change the input reagents for the selected job:
-open the job's "Details" screen by clicking the magnifying glass, then press :kbd:`Ctrl-D`.
+open the job's "Details" screen by clicking the magnifying glass, then press :kbd:`Ctrl-D`
+or click the "Configure job inputs" label. This is possible in a workshop
+job list and manager work order list (in case the magnifying glass is present),
+as well as from the work order conditions screen.
 
 Pressing :kbd:`i` shows a dialog where you can select an item type from a list.
 
