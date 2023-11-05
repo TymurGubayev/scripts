@@ -62,19 +62,26 @@ function JobDetails:init(args)
                 '  ', status
             }
         },
-        widgets.Label{
-            frame = { l = 0, t = 4 },
-            text = {
-                { key = 'CUSTOM_I', text = ': Input item, ',
-                  enabled = self:callback('canChangeIType'),
-                  on_activate = self:callback('onChangeIType') },
-                { key = 'CUSTOM_M', text = ': Material, ',
-                  enabled = self:callback('canChangeMat'),
-                  on_activate = self:callback('onChangeMat') },
-                { key = 'CUSTOM_T', text = ': Traits',
-                  enabled = self:callback('canChangeTrait'),
-                  on_activate = self:callback('onChangeTrait') }
-            }
+        widgets.HotkeyLabel{
+            frame = { l = 0, t = 4},
+            key = 'CUSTOM_I',
+            label = "Input item",
+            enabled = self:callback('canChangeIType'),
+            on_activate = self:callback('onChangeIType'),
+        },
+        widgets.HotkeyLabel{
+            frame = { l = string.len("i: Input item") + 1, t = 4},
+            key = 'CUSTOM_M',
+            label = "Material",
+            enabled = self:callback('canChangeMat'),
+            on_activate = self:callback('onChangeMat'),
+        },
+        widgets.HotkeyLabel{
+            frame = { l = string.len("i: Input item m: Material") + 1, t = 4},
+            key = 'CUSTOM_T',
+            label = "Traits",
+            enabled = self:callback('canChangeTrait'),
+            on_activate = self:callback('onChangeTrait'),
         },
         widgets.List{
             view_id = 'list',
