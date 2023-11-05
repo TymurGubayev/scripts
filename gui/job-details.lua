@@ -346,24 +346,42 @@ local function ScrJobDetails()
     return df.global.game.main_interface.job_details
 end
 
+local function ScrWorkorderConditions()
+    return df.global.game.main_interface.info.work_orders.conditions
+end
+
 local function show_job_details()
-    local scr = ScrJobDetails()
-    if not scr.open -- dfhack.gui.matchFocusString('dwarfmode/JobDetails')
-    then
-        qerror("This script needs to be run from a job details screen")
-    end
-
     local job
-    if scr.context == df.job_details_context_type.BUILDING_TASK_LIST then
-        job = scr.jb
-    elseif scr.context == df.job_details_context_type.MANAGER_WORK_ORDER then
-        job = scr.wq
-    end
-    if job == nil then
-        qerror("Unhandled screen context: ".. df.job_details_context_type[scr.context])
+    local context
+    local scr = ScrJobDetails()
+
+    if scr.open
+    then
+        context = scr.context
+        if context == df.job_details_context_type.BUILDING_TASK_LIST
+        or context == df.job_details_context_type.TASK_LIST_TASK
+        then
+            job = scr.jb
+        elseif context == df.job_details_context_type.MANAGER_WORK_ORDER then
+            job = scr.wq
+        end
+        if job == nil then
+            qerror("Unhandled screen context: ".. df.job_details_context_type[context])
+        end
+    else
+        scr = ScrWorkorderConditions()
+        if scr.open
+        then
+            context = df.job_details_context_type.MANAGER_WORK_ORDER
+            job = scr.wq
+        end
     end
 
-    JobDetailsScreen{ job = job, context = scr.context }:show()
+    if (job == nil) then
+        qerror("This script needs to be run from a job details or order conditions screen")
+    end
+
+    JobDetailsScreen{ job = job, context = context }:show()
 end
 
 -- --------------------
@@ -399,23 +417,75 @@ function DetailsHotkeyOverlay:init()
     }
 end
 
-DetailsHotkeyOverlay_ManagerWorkOrder = defclass(DetailsHotkeyOverlay_ManagerWorkOrder, DetailsHotkeyOverlay)
-DetailsHotkeyOverlay_ManagerWorkOrder.ATTRS{
-    default_pos={x=5, y=5}, -- {x=5, y=5} is right above the job title
-    viewscreens='dwarfmode/JobDetails/MANAGER_WORK_ORDER',
-}
-
 DetailsHotkeyOverlay_BuildingTask = defclass(DetailsHotkeyOverlay_BuildingTask, DetailsHotkeyOverlay)
 DetailsHotkeyOverlay_BuildingTask.ATTRS{
     default_pos={x=-120, y=6}, -- {x=-120, y=6} is right above the job title on all but smallest widths
     viewscreens='dwarfmode/JobDetails/BUILDING_TASK_LIST',
 }
 
+DetailsHotkeyOverlay_ManagerWorkOrder = defclass(DetailsHotkeyOverlay_ManagerWorkOrder, DetailsHotkeyOverlay)
+DetailsHotkeyOverlay_ManagerWorkOrder.ATTRS{
+    default_pos={x=5, y=5}, -- {x=5, y=5} is right above the job title
+    viewscreens={
+        'dwarfmode/JobDetails/MANAGER_WORK_ORDER',
+        -- as of DF50.11, once input materials in the task list are changed,
+        -- there is no going back (the magnifying glass button disappears),
+        -- which is why this option is disabled.
+        -- 'dwarfmode/JobDetails/TASK_LIST_TASK',
+    },
+}
+
+DetailsHotkeyOverlay_ManagerWorkOrderConditions = defclass(DetailsHotkeyOverlay_ManagerWorkOrderConditions, DetailsHotkeyOverlay)
+DetailsHotkeyOverlay_ManagerWorkOrderConditions.ATTRS{
+    default_pos={x=37, y=7},
+    frame={w=DetailsHotkeyOverlay.ATTRS.frame.w, h=3}, -- we need h=3 here to move the button around depending on tabs in one or two rows
+    viewscreens='dwarfmode/Info/WORK_ORDERS/Conditions',
+}
+
+--
+-- change label position if window is resized
+-- same logic as in workorder-recheck.lua
+--
+local function areTabsInTwoRows()
+    -- get the tile above the order status icon
+    local pen = dfhack.screen.readTile(7, 7, false)
+    -- in graphics mode, `0` when one row, something else when two (`67` aka 'C' from "Creatures")
+    -- in ASCII mode, `32` aka ' ' when one row, something else when two (`196` aka '-' from tab frame's top)
+    return pen.ch == 67 or pen.ch == 196
+end
+
+function DetailsHotkeyOverlay_ManagerWorkOrderConditions:updateTextButtonFrame()
+    local twoRows = areTabsInTwoRows()
+    if (self._twoRows == twoRows) then return false end
+
+    self._twoRows = twoRows
+    local frame = twoRows
+            and {b=0, l=0, r=0, h=1}
+            or  {t=0, l=0, r=0, h=1}
+    self.subviews.button.frame = frame
+
+    return true
+end
+
+function DetailsHotkeyOverlay_ManagerWorkOrderConditions:onRenderBody(dc)
+    if (self.frame_rect.y1 == 7) then
+        -- only apply this logic if the overlay is on the same row as
+        -- originally thought: just above the order status icon
+
+        if self:updateTextButtonFrame() then
+            self:updateLayout()
+        end
+    end
+
+    DetailsHotkeyOverlay_ManagerWorkOrderConditions.super.onRenderBody(self, dc)
+end
+
 -- -------------------
 
 OVERLAY_WIDGETS = {
     job_details=DetailsHotkeyOverlay_BuildingTask,
     workorder_details=DetailsHotkeyOverlay_ManagerWorkOrder,
+    workorder_conditions=DetailsHotkeyOverlay_ManagerWorkOrderConditions,
 }
 
 if dfhack_flags.module then
