@@ -145,10 +145,20 @@ local function describe_material(iobj)
     return matline
 end
 
+local function isString(o)
+    return type(o) == "string"
+end
+
 local function list_flags(list, bitfield)
     for name,val in pairs(bitfield) do
         if val then
-            table.insert(list, name)
+            -- as of DFHack version 50.11-r2 (git: 94d70e0) on x86_64,
+            -- a job_item_flags3[20] might be set on a job item (f.e. Cut Gems)
+            -- even though the flag is unnamed (i.e. `df.job_item_flags3[20] == nil`)
+            -- we'll ignore those for clarity.
+            if isString(name) then
+                table.insert(list, name)
+            end
         end
     end
 end
