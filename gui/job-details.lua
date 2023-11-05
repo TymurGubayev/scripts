@@ -40,6 +40,7 @@ JobDetails.ATTRS {
 
 function JobDetails:isManagerOrder()
     return self.context == df.job_details_context_type.MANAGER_WORK_ORDER
+        or self.context == df.job_details_context_type.BUILDING_WORK_ORDER
 end
 
 function JobDetails:init(args)
@@ -379,7 +380,9 @@ local function show_job_details()
         or context == df.job_details_context_type.TASK_LIST_TASK
         then
             job = scr.jb
-        elseif context == df.job_details_context_type.MANAGER_WORK_ORDER then
+        elseif context == df.job_details_context_type.MANAGER_WORK_ORDER
+            or context == df.job_details_context_type.BUILDING_WORK_ORDER
+        then
             job = scr.wq
         end
         if job == nil then
@@ -438,7 +441,10 @@ DetailsHotkeyOverlay_BuildingTask = defclass(DetailsHotkeyOverlay_BuildingTask, 
 DetailsHotkeyOverlay_BuildingTask.ATTRS{
     default_pos={x=7, y=6},
     frame={w=1000, h= 1}, -- we'll move the text inside the line, that's why it's w=1000
-    viewscreens='dwarfmode/JobDetails/BUILDING_TASK_LIST',
+    viewscreens={
+        'dwarfmode/JobDetails/BUILDING_TASK_LIST',
+        'dwarfmode/JobDetails/BUILDING_WORK_ORDER',
+    }
 }
 
 function DetailsHotkeyOverlay_BuildingTask:updateTextButtonFrame()
