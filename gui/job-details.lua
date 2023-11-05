@@ -416,7 +416,7 @@ function DetailsHotkeyOverlay:init()
     self:addviews{
         widgets.TextButton{
             view_id = 'button',
-            frame={t=0, l=0, r=0, h=1},
+            frame={t=0, l=0, w=DetailsHotkeyOverlay.ATTRS.frame.w, h=1},
             label=LABEL_TEXT,
             key='CUSTOM_CTRL_D',
             on_activate=show_job_details,
@@ -426,9 +426,37 @@ end
 
 DetailsHotkeyOverlay_BuildingTask = defclass(DetailsHotkeyOverlay_BuildingTask, DetailsHotkeyOverlay)
 DetailsHotkeyOverlay_BuildingTask.ATTRS{
-    default_pos={x=-120, y=6}, -- {x=-120, y=6} is right above the job title on all but smallest widths
+    default_pos={x=7, y=6},
+    frame={w=1000, h= 1}, -- we'll move the text inside the line, that's why it's w=1000
     viewscreens='dwarfmode/JobDetails/BUILDING_TASK_LIST',
 }
+
+function DetailsHotkeyOverlay_BuildingTask:updateTextButtonFrame()
+    local mainWidth, _ = dfhack.screen.getWindowSize()
+    if (self._mainWidth == mainWidth) then return false end
+
+    self._mainWidth = mainWidth
+
+    local offset = 0
+    local threshold = 145
+    if mainWidth < threshold then
+        mainWidth = threshold
+    end
+    offset = (mainWidth - threshold)
+
+    local frame = {l=6 + offset, w=DetailsHotkeyOverlay.ATTRS.frame.w}
+    self.subviews.button.frame = frame
+
+    return true
+end
+
+function DetailsHotkeyOverlay_BuildingTask:onRenderBody(dc)
+    if self:updateTextButtonFrame() then
+        self:updateLayout()
+    end
+
+    DetailsHotkeyOverlay_BuildingTask.super.onRenderBody(self, dc)
+end
 
 DetailsHotkeyOverlay_ManagerWorkOrder = defclass(DetailsHotkeyOverlay_ManagerWorkOrder, DetailsHotkeyOverlay)
 DetailsHotkeyOverlay_ManagerWorkOrder.ATTRS{
