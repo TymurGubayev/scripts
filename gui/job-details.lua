@@ -439,8 +439,10 @@ end
 
 DetailsHotkeyOverlay_BuildingTask = defclass(DetailsHotkeyOverlay_BuildingTask, DetailsHotkeyOverlay)
 DetailsHotkeyOverlay_BuildingTask.ATTRS{
-    default_pos={x=7, y=6},
-    frame={w=1000, h= 1}, -- we'll move the text inside the line, that's why it's w=1000
+    -- 7 is the x position of the text on the narrowest screen
+    -- we make the frame wider by 7 so we can move the label a bit if necessary
+    default_pos={x=-110 + 7, y=6},
+    frame={w=DetailsHotkeyOverlay.ATTRS.frame.w + 7, h= 1},
     viewscreens={
         'dwarfmode/JobDetails/BUILDING_TASK_LIST',
         'dwarfmode/JobDetails/BUILDING_WORK_ORDER',
@@ -453,15 +455,22 @@ function DetailsHotkeyOverlay_BuildingTask:updateTextButtonFrame()
 
     self._mainWidth = mainWidth
 
-    local offset = 0
-    local threshold = 145
-    if mainWidth < threshold then
-        mainWidth = threshold
-    end
-    offset = (mainWidth - threshold)
+    -- calculated position of the left edge - not necessarily the real one if the screen is too narrow
+    local x1 = mainWidth + DetailsHotkeyOverlay_BuildingTask.ATTRS.default_pos.x - DetailsHotkeyOverlay_BuildingTask.ATTRS.frame.w
 
-    local frame = {l=6 + offset, w=DetailsHotkeyOverlay.ATTRS.frame.w}
-    self.subviews.button.frame = frame
+    local offset = 0
+    if x1 < 0 then
+        x1 = 0
+    end
+    if x1 < 6 then
+        offset = 6 - x1
+    end
+
+    self.subviews.button.frame.l = offset
+
+    -- this restores original position for the case the screen was narrowed to the minimum
+    -- and then expanded again.
+    self.frame.r = - DetailsHotkeyOverlay_BuildingTask.ATTRS.default_pos.x - 1
 
     return true
 end
