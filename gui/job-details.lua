@@ -152,7 +152,7 @@ local function list_flags(list, bitfield)
             -- a job_item_flags3[20] might be set on a job item (f.e. Cut Gems)
             -- even though the flag is unnamed (i.e. `df.job_item_flags3[20] == nil`)
             -- we'll ignore those for clarity.
-            if isString(name) then
+            if not dfhack.getHideArmokTools() or isString(name) then
                 table.insert(list, name)
             end
         end
@@ -355,18 +355,13 @@ function JobDetails:onChangeTrait()
     }:show()
 end
 
-local function ScrJobDetails()
-    return df.global.game.main_interface.job_details
-end
-
-local function ScrWorkorderConditions()
-    return df.global.game.main_interface.info.work_orders.conditions
-end
+local ScrJobDetails = df.global.game.main_interface.job_details
+local ScrWorkorderConditions = df.global.game.main_interface.info.work_orders.conditions
 
 local function show_job_details()
     local job
     local context
-    local scr = ScrJobDetails()
+    local scr = ScrJobDetails
 
     if scr.open
     then
@@ -384,7 +379,7 @@ local function show_job_details()
             qerror("Unhandled screen context: ".. df.job_details_context_type[context])
         end
     else
-        scr = ScrWorkorderConditions()
+        scr = ScrWorkorderConditions
         if scr.open
         then
             context = df.job_details_context_type.MANAGER_WORK_ORDER
