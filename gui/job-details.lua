@@ -93,11 +93,20 @@ function JobDetails:init(args)
             row_height = 4,
             scroll_keys = widgets.SECONDSCROLL,
         },
+        widgets.HotkeyLabel{
+            frame = { l = 0, b = 0 },
+            key = 'CUSTOM_CTRL_Z',
+            label = "Reset changes",
+            auto_width=true,
+            -- enabled = self:callback('canResetChanges'),
+            on_activate = self:callback('onResetChanges'),
+        },
     }
 
     self.list = self.subviews.list
 
     self:initListChoices()
+    self:storeInitialProperties()
 
     local h = 2 -- window border
         + self.list.frame.t -- everything above the list
@@ -105,6 +114,33 @@ function JobDetails:init(args)
         + 2 -- LEAVESCREEN
         + 2 -- window border
     self.frame.h = h
+end
+
+function JobDetails:storeInitialProperties()
+    local stored = {}
+    for i,iobj in ipairs(self.job.items) do
+        local copy = {}
+
+        copy.item_type = iobj.item_type
+        copy.item_subtype = iobj.item_subtype
+
+        copy.mat_type = iobj.mat_type
+        copy.mat_index = iobj.mat_index
+
+        for i = 1, 5 do
+            if not df['job_item_flags'..i] then break end
+            local ffield = 'flags'..i
+
+            copy[ffield] = {}
+            for k,v in pairs(iobj[ffield]) do
+                copy[ffield][k] = v
+            end
+        end
+
+        stored[i] = copy
+    end
+
+    self.stored = stored
 end
 
 local function describe_item_type(iobj)
@@ -365,6 +401,21 @@ function JobDetails:onChangeTrait()
         prompt = 'Please select traits for input '..idx,
         none_caption = 'no traits',
     }:show()
+end
+
+function JobDetails:onResetChanges()
+    for i, stored_obj in pairs(self.stored) do
+        local iobj = self.job.items[i]
+        for k,v in pairs(stored_obj) do
+            if type(v) ~= 'table' then
+                iobj[k] = v
+            else
+                for k1,v1 in pairs(v) do
+                    iobj[k][k1] = v1
+                end
+            end
+        end
+    end
 end
 
 local ScrJobDetails = df.global.game.main_interface.job_details
