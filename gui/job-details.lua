@@ -510,14 +510,10 @@ DetailsHotkeyOverlay_ManagerWorkOrderConditions.ATTRS{
 
 --
 -- change label position if window is resized
--- same logic as in workorder-recheck.lua
 --
 local function areTabsInTwoRows()
-    -- get the tile above the order status icon
-    local pen = dfhack.screen.readTile(7, 7, false)
-    -- in graphics mode, `0` when one row, something else when two (`67` aka 'C' from "Creatures")
-    -- in ASCII mode, `32` aka ' ' when one row, something else when two (`196` aka '-' from tab frame's top)
-    return pen.ch == 67 or pen.ch == 196
+    local mainWidth, _ = dfhack.screen.getWindowSize()
+    return mainWidth < 155
 end
 
 function DetailsHotkeyOverlay_ManagerWorkOrderConditions:updateTextButtonFrame()
