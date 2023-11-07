@@ -195,9 +195,35 @@ local function describe_item_traits(iobj)
     return table.concat(line1, ', ')
 end
 
+local function GetHeader(iobj, items, i, is_active_job)
+    local q = iobj.quantity
+    if iobj.min_dimension > 0 then
+        local q1 = q / iobj.min_dimension
+        q = math.floor(q1) -- this makes it an int, removing `.0` from `1.0` when converted to string
+        if q1 ~= q then
+            -- round to 1 decimal point
+            q = math.floor(q1 * 10) / 10
+        end
+    end
+
+    local head = 'Item '..(i+1)
+    if is_active_job then
+        head = head..': '..(items[i] or 0)..' of '..q
+    else
+        head = head..' (quantity: '..q..')'
+    end
+
+    -- if iobj.min_dimension > 0 then
+    --     head = head .. ' (size '..iobj.min_dimension..')'
+    -- end
+
+    return head
+end
+
 function JobDetails:initListChoices()
-    local headers = {}
     local job_items
+    local items = {}
+    local is_active_job = false
     if self:isManagerOrder() then
         if not self.job.items then
             self.list:setChoices({})
@@ -205,16 +231,9 @@ function JobDetails:initListChoices()
         end
 
         job_items = self.job.items
-        for i,iobj in ipairs(job_items) do
-            local head = 'Item '..(i+1)..' x'..iobj.quantity
-            if iobj.min_dimension > 0 then
-                head = head .. ' (size '..iobj.min_dimension..')'
-            end
-
-            headers[i] = head
-        end
     else
-        local items = {}
+        is_active_job = true
+
         for i,ref in ipairs(self.job.items) do
             local idx = ref.job_item_idx
             if idx >= 0 then
@@ -223,14 +242,11 @@ function JobDetails:initListChoices()
         end
 
         job_items = self.job.job_items
-        for i,iobj in ipairs(job_items) do
-            local head = 'Item '..(i+1)..': '..(items[i] or 0)..' of '..iobj.quantity
-            if iobj.min_dimension > 0 then
-                head = head .. ' (size '..iobj.min_dimension..')'
-            end
+    end
 
-            headers[i] = head
-        end
+    local headers = {}
+    for i,iobj in ipairs(job_items) do
+        headers[i] = GetHeader(iobj, items, i, is_active_job)
     end
 
     local choices = {}
