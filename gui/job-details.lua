@@ -221,16 +221,14 @@ local function GetHeader(iobj, items, i, is_active_job)
 end
 
 function JobDetails:initListChoices()
-    local job_items
+    local job_items = self.job.items
     local items = {}
     local is_active_job = false
     if self:isManagerOrder() then
-        if not self.job.items then
+        if not job_items then
             self.list:setChoices({})
             return
         end
-
-        job_items = self.job.items
     else
         is_active_job = true
 
@@ -240,8 +238,6 @@ function JobDetails:initListChoices()
                 items[idx] = (items[idx] or 0) + 1
             end
         end
-
-        job_items = self.job.job_items
     end
 
     local headers = {}
@@ -374,7 +370,7 @@ end
 local ScrJobDetails = df.global.game.main_interface.job_details
 local ScrWorkorderConditions = df.global.game.main_interface.info.work_orders.conditions
 
-local function show_job_details()
+local function get_current_job()
     local job
     local context
     local scr = ScrJobDetails
@@ -403,11 +399,23 @@ local function show_job_details()
         end
     end
 
+    return job, context
+end
+
+local function show_job_details()
+    local job, context = get_current_job()
+
     if (job == nil) then
         qerror("This script needs to be run from a job details or order conditions screen")
     end
 
     JobDetailsScreen{ job = job, context = context }:show()
+end
+
+local function is_change_possible()
+    -- we say it is if there is at least one item in the job
+    local job = get_current_job()
+    return job.items and #job.items ~= 0
 end
 
 -- --------------------
@@ -439,6 +447,7 @@ function DetailsHotkeyOverlay:init()
             label=LABEL_TEXT,
             key='CUSTOM_CTRL_D',
             on_activate=show_job_details,
+            enabled=is_change_possible,
         },
     }
 end
