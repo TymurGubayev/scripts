@@ -409,15 +409,24 @@ function JobDetails:onChangeTrait()
 end
 
 function JobDetails:onResetChanges()
-    for i, stored_obj in pairs(self.stored) do
-        local iobj = self.job.items[i]
-        for k,v in pairs(stored_obj) do
-            if type(v) ~= 'table' then
-                iobj[k] = v
-            else
-                for k1,v1 in pairs(v) do
-                    iobj[k][k1] = v1
-                end
+    for _, obj in pairs(self.list.choices) do
+        local stored_obj = self.stored[obj.index]
+
+        local item_type = stored_obj.item_type
+        local item_subtype = stored_obj.item_subtype
+        self:setItemType(obj, item_type, item_subtype)
+
+        local mat_type = stored_obj.mat_type
+        local mat_index = stored_obj.mat_index
+        self:setMaterial(obj, mat_type, mat_index)
+
+        for i = 1, 5 do
+            local k = 'flags'..i
+            local flags = stored_obj[k]
+            if not flags then break end
+
+            for k1,v1 in pairs(flags) do
+                obj.iobj[k][k1] = v1
             end
         end
     end
