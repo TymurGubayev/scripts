@@ -93,14 +93,6 @@ function JobDetails:init(args)
             row_height = 4,
             scroll_keys = widgets.SECONDSCROLL,
         },
-        widgets.Label{
-            frame = { l = 0, b = 0 },
-            text = {
-                { key = 'LEAVESCREEN', text = ': Back',
-                  -- on_activate = self:callback('dismiss')
-                }
-            }
-        },
     }
 
     self.list = self.subviews.list
