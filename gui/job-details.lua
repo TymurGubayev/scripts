@@ -301,6 +301,11 @@ function JobDetails:initListChoices()
 end
 
 function JobDetails:canChangeIType()
+    if dfhack.getHideArmokTools() then
+        -- as this could be considered an exploit
+        return false
+    end
+
     local idx, obj = self.list:getSelected()
     return obj ~= nil
 end
