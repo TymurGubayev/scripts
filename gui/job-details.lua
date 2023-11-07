@@ -257,14 +257,16 @@ local function GetHeader(iobj, items, i, is_active_job)
 end
 
 function JobDetails:initListChoices()
-    local job_items = self.job.items
+    local job_items
     local items = {}
     local is_active_job = false
     if self:isManagerOrder() then
-        if not job_items then
+        if not self.job.items then
             self.list:setChoices({})
             return
         end
+
+        job_items = self.job.items
     else
         is_active_job = true
 
@@ -274,6 +276,8 @@ function JobDetails:initListChoices()
                 items[idx] = (items[idx] or 0) + 1
             end
         end
+
+        job_items = self.job.job_items
     end
 
     local headers = {}
