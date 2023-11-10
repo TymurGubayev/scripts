@@ -38,9 +38,13 @@ JobDetails.ATTRS {
     context = DEFAULT_NIL,
 }
 
+local function isManagerOrder(context)
+    return context == df.job_details_context_type.MANAGER_WORK_ORDER
+        or context == df.job_details_context_type.BUILDING_WORK_ORDER
+end
+
 function JobDetails:isManagerOrder()
-    return self.context == df.job_details_context_type.MANAGER_WORK_ORDER
-        or self.context == df.job_details_context_type.BUILDING_WORK_ORDER
+    return isManagerOrder(self.context)
 end
 
 function JobDetails:init(args)
@@ -118,7 +122,8 @@ end
 
 function JobDetails:storeInitialProperties()
     local stored = {}
-    for i,iobj in ipairs(self.job.items) do
+    for _, choice in ipairs(self.list.choices) do
+        local iobj = choice.iobj
         local copy = {}
 
         copy.item_type = iobj.item_type
@@ -137,7 +142,7 @@ function JobDetails:storeInitialProperties()
             end
         end
 
-        stored[i] = copy
+        stored[choice.index] = copy
     end
 
     self.stored = stored
@@ -413,16 +418,16 @@ function JobDetails:onChangeTrait()
 end
 
 function JobDetails:onResetChanges()
-    for _, obj in pairs(self.list.choices) do
-        local stored_obj = self.stored[obj.index]
+    for _, choice in pairs(self.list.choices) do
+        local stored_obj = self.stored[choice.index]
 
         local item_type = stored_obj.item_type
         local item_subtype = stored_obj.item_subtype
-        self:setItemType(obj, item_type, item_subtype)
+        self:setItemType(choice, item_type, item_subtype)
 
         local mat_type = stored_obj.mat_type
         local mat_index = stored_obj.mat_index
-        self:setMaterial(obj, mat_type, mat_index)
+        self:setMaterial(choice, mat_type, mat_index)
 
         for i = 1, 5 do
             local k = 'flags'..i
@@ -430,7 +435,7 @@ function JobDetails:onResetChanges()
             if not flags then break end
 
             for k1,v1 in pairs(flags) do
-                obj.iobj[k][k1] = v1
+                choice.iobj[k][k1] = v1
             end
         end
     end
@@ -483,8 +488,12 @@ end
 
 local function is_change_possible()
     -- we say it is if there is at least one item in the job
-    local job = get_current_job()
-    return job.items and #job.items ~= 0
+    local job, context = get_current_job()
+    if isManagerOrder(context) then
+        return job.items and #job.items ~= 0
+    else
+        return job.job_items and #job.job_items ~= 0
+    end
 end
 
 -- --------------------
